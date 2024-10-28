@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Frontend",
+    "slug": "Frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "App/assets/Images/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "App/assets/Images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Esta aplicación necesita acceder a la cámara para que puedas tomar fotos.",
+        "NSPhotoLibraryUsageDescription": "Esta aplicación necesita acceder a tu galería para que puedas seleccionar fotos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "App/assets/Images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "App/assets/Images/favicon.png"
+    }
+  }
+}

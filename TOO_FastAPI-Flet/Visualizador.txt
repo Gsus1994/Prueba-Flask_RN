@@ -1,0 +1,20 @@
+[Frontend]
+    Crear ejecutable (modificar ruta de imágenes) 
+  pyinstaller --onefile --noconsole --name "Visual-Too" --icon="C:\\Users\\Usuario\\Desktop\\Visual_Too\\resources\\240509_Too_Logo_App.ico" --add-data "C:\\Users\\Usuario\\Desktop\\Visual_Too\\resources\\240509_Too_Logo_Gris_Oscuro.png;." Frontend-Too.py
+
+
+CAMBIAR
+  -dirección peticiones http
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[Backend]
+  -Construir imagen:
+  docker build -t censurador .
+
+  -Arrancar container:
+  docker run -p 8000:8000 censurador 
+
+
+  CAMBIAR
+  -host, port, data-base direction, CORS

@@ -1,0 +1,8 @@
+#Backend/app.py
+ 
+from src import create_app
+
+app = create_app('development')  # Cambiar a 'production' en producción
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=6969)

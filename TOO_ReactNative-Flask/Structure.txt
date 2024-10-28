@@ -1,0 +1,3372 @@
+MIT License
+
+Copyright (c) 2024 Jesús M.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------------------------------------------
+
+#git y controladores de versiones
+.gitignore
+.git
+
+# Frontend dependencies
+Frontend/node_modules/
+
+# Expo
+Frontend/.expo/
+Frontend/.vscode
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+Frontend/.vscode
+
+# typescript
+*.tsbuildinfo
+
+#configuracion de entorno virtual, variables de entorno y archivos de python compilados
+Backend/venv
+Backend/.env
+Backend/flask_session
+Backend/logs
+__pycache__
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+Frontend/
+│   
+├── App/
+│   │   
+│   ├── Assets/
+│   │      │
+│   │      ├── Fonts/
+│   │      └── Images/
+│   │   
+│   ├── Constants/
+│   │      │
+│   │      ├── colors.tsx
+│   │      └── strings.tsx
+│   │
+│   ├── Contexts/
+│   │      │
+│   │      ├── roomContext.tsx
+│   │      └── userContext.tsx
+│   │   
+│   ├── Hooks/
+│   │      │
+│   │      └── 
+│   │ 
+│   ├── Types/
+│   │      │
+│   │      ├── formTypes.tsx
+│   │      ├── navigationTypes.tsx
+│   │      └── userTypes.tsx
+│   │ 
+│   ├── Services/
+│   │      │
+│   │      ├── authServices.tsx
+│   │      ├── imageServices.tsx
+│   │      ├── roomServices.tsx
+│   │      └── userServices.tsx
+│   │   
+│   └── Screens/
+│          │
+│          ├── Auth/
+│          │     │
+│          │     ├── AuthComponents/
+│          │     │     │
+│          │     │     ├── customButton.tsx
+│          │     │     └── customInput.tsx
+│          │     │     
+│          │     ├── login.tsx
+│          │     ├── recovery.tsx
+│          │     └── signup.tsx
+│          │
+│          ├── Navigation/
+│          │     │
+│          │     ├── NavigationComponents/
+│          │     └── navigator.tsx
+│          │
+│          ├── Pantallas/
+│          │     │
+│          │     ├── PantallasComponents/
+│          │     ├── contratcs.tsx
+│          │     ├── profile.tsx
+│          │     └── settings.tsx
+│          │
+│          └── ScreensComponents/
+│                │
+│                ├── modal.tsx
+│                └── loader.tsx
+│
+├── node_modules/  -->  (en .gitignore)
+├── app.json
+├── App.tsx
+├── babel.config.js
+├── package-lock.json
+├── package.json
+└── tsconfig.json
+
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/tsconfig.json
+
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-native",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/package.json
+
+{
+  "name": "prueba1",
+  "version": "1.0.0",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "windows": "react-native run-windows"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-native-community/datetimepicker": "^8.0.1",
+    "@react-native-community/masked-view": "^0.1.11",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.11.0",
+    "@react-navigation/stack": "^6.4.1",
+    "axios": "^1.7.7",
+    "expo": "~51.0.38",
+    "expo-image-picker": "~15.0.7",
+    "expo-linear-gradient": "~13.0.2",
+    "expo-status-bar": "~1.12.1",
+    "expo-text-recognition": "^0.1.1",
+    "react": "18.2.0",
+    "react-datepicker": "^7.4.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.53.0",
+    "react-native": "0.74.5",
+    "react-native-element-textinput": "^2.2.0",
+    "react-native-elements": "^3.4.3",
+    "react-native-gesture-handler": "~2.16.1",
+    "react-native-paper": "^5.12.5",
+    "react-native-reanimated": "~3.10.1",
+    "react-native-safe-area-context": "4.10.5",
+    "react-native-screens": "3.31.1",
+    "react-native-swiper": "^1.6.0",
+    "react-native-vector-icons": "^10.2.0",
+    "react-native-web": "~0.19.10",
+    "react-native-windows": "0.74.21",
+    "typescript": "~5.3.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/plugin-transform-export-namespace-from": "^7.24.7",
+    "@babel/plugin-transform-private-methods": "^7.25.4",
+    "@types/axios": "^0.9.36",
+    "@types/react": "~18.2.79",
+    "@types/react-native": "^0.72.8",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "@types/react-navigation": "^3.0.8",
+    "metro-config": "^0.80.12",
+    "metro-react-native-babel-preset": "^0.77.0"
+  },
+  "private": true
+}
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/package-lock.json --> archivo formato json 
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/babel.config.tsx
+
+module.exports = {
+  presets: ['module:metro-react-native-babel-preset'],
+  plugins: [
+    '@babel/plugin-transform-export-namespace-from',
+    ['@babel/plugin-transform-class-properties', { loose: true }],
+    ['@babel/plugin-transform-private-methods', { loose: true }],
+    ['@babel/plugin-transform-private-property-in-object', { loose: true }],
+    'react-native-reanimated/plugin'
+  ],
+};
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/App.tsx
+
+import React from 'react';
+import AppNavigator from './App/Screens/Navigation/navigator';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+const App = () => {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppNavigator />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+};
+
+export default App;
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/app.json
+
+{
+  "expo": {
+    "name": "Frontend",
+    "slug": "Frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "App/assets/Images/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "App/assets/Images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Esta aplicación necesita acceder a la cámara para que puedas tomar fotos.",
+        "NSPhotoLibraryUsageDescription": "Esta aplicación necesita acceder a tu galería para que puedas seleccionar fotos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "App/assets/Images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "App/assets/Images/favicon.png"
+    }
+  }
+}
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/node_modules/ --> archivo en .gitignore
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Constants/colors.ts
+
+export const COLORS = {
+    primary: '#4CAF50', // Verde
+    secondary: '#f9f9f9', // Gris muy claro
+    error: '#f44336', // Rojo para errores
+    background: '#ffffff', // Blanco
+    text: '#333333', // Texto principal
+    icon: '#000', // Iconos
+    buttonText: '#ffffff', // Texto de botones
+    buttonColor: '#007BFF', //
+    // Agrega más colores según sea necesario
+};
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Types/formTypes.tsx
+
+export interface LoginResponse {
+    access_token: string;
+}
+
+export interface LoginData {
+    username: string;
+    password: string;
+}
+
+export interface SignupResponse {
+    msg: string;
+}
+
+export interface SignupData {
+    confirmPassword: string;
+    nombre: string;
+    apellidos: string;
+    dni: string;
+    fecha_nacimiento: string;
+    email: string;
+    password: string;
+    profile_image: {
+        uri: string;
+        name: string;
+        type: string;
+    };
+}
+
+export interface SignupFormData {
+    dni: string;
+    nombre: string;
+    apellidos: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+}
+
+export interface SignupFormInputs extends SignupFormData {
+    date?: Date;
+    profileImage?: string;
+}
+
+export interface RecoveryFormData {
+    email: string;
+    code?: string;
+    new_password?: string;
+    confirm_password?: string;
+}
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Types/navigationTypes.tsx
+
+import { CompositeScreenProps } from '@react-navigation/native';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { StackScreenProps } from '@react-navigation/stack';
+
+export type RootStackParamList = {
+    Login: undefined;
+    Signup: undefined;
+    Recovery: undefined;
+    HomeTabs: undefined;
+};
+
+export type TabParamList = {
+    Perfil: undefined;
+    Acuerdos: undefined;
+    Ajustes: undefined;
+};
+
+export type TabScreenProps<T extends keyof TabParamList> = CompositeScreenProps<
+    BottomTabScreenProps<TabParamList, T>,
+    StackScreenProps<RootStackParamList>
+>;
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Types/userTypes.tsx
+
+export interface ProfileData {
+    nombre: string;
+    apellido: string;
+    dni: string;
+    fecha_nacimiento: string;
+    email: string;
+    profile_image_url: string;
+}
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Services/authServices.tsx
+
+import axios from 'axios';
+import { LoginData, LoginResponse, SignupData, SignupResponse } from '../Types/formTypes';
+
+const API_URL = 'http://192.168.1.45:6969';
+
+export const loginUser = async (userData: LoginData): Promise<LoginResponse> => {
+    try {
+        const response = await axios.post<LoginResponse>(`${API_URL}/login`, userData, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 5000,
+        });
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            throw new Error(error.response.data.msg || 'Error en el proceso de login');
+        } else {
+            throw new Error('Error de conexión');
+        }
+    }
+};
+
+export const requestPasswordReset = async (email: string) => {
+    try {
+        const response = await axios.post(`${API_URL}/password-reset/request`, { email });
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            throw new Error(error.response.data.msg || 'Error al solicitar restablecimiento de contraseña');
+        } else {
+            throw new Error('Error de conexión');
+        }
+    }
+};
+
+export const confirmPasswordReset = async (email: string, code: string, new_password: string) => {
+    try {
+        const response = await axios.post(`${API_URL}/password-reset/confirm`, { email, code, new_password });
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            throw new Error(error.response.data.msg || 'Error al confirmar restablecimiento de contraseña');
+        } else {
+            throw new Error('Error de conexión');
+        }
+    }
+};
+
+/**
+ * Función para registrar un nuevo usuario.
+ * @param userData Datos del usuario para el registro.
+ * @returns Respuesta del servidor.
+ */
+export const signupUser = async (userData: SignupData): Promise<SignupResponse> => {
+    try {
+        const formData = new FormData();
+        formData.append('nombre', userData.nombre);
+        formData.append('apellidos', userData.apellidos);
+        formData.append('dni', userData.dni);
+        formData.append('fecha_nacimiento', userData.fecha_nacimiento);
+        formData.append('email', userData.email);
+        formData.append('password', userData.password);
+        formData.append('profile_image', {
+            uri: userData.profile_image.uri,
+            name: userData.profile_image.name,
+            type: userData.profile_image.type,
+        } as any);
+
+        const response = await axios.post<SignupResponse>(`${API_URL}/register`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            timeout: 10000,
+        });
+
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            throw new Error(error.response.data.msg || 'Error en el proceso de registro');
+        } else {
+            throw new Error('Error de conexión');
+        }
+    }
+};
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Services/imageServices.tsx
+
+import { Alert } from 'react-native';
+import { Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { isAxiosErrorWithResponse } from './userServices';
+
+const API_URL = 'http://192.168.1.45:6969';
+
+/**
+ * Solicita permisos para acceder a la cámara.
+ * @returns Booleano indicando si los permisos fueron otorgados.
+ */
+export const requestCameraPermission = async (): Promise<boolean> => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+        Alert.alert(
+            'Permiso de Cámara Denegado',
+            'Necesitas otorgar permisos para usar la cámara.'
+        );
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Solicita permisos para acceder a la galería de imágenes.
+ * @returns Booleano indicando si los permisos fueron otorgados.
+ */
+export const requestMediaLibraryPermission = async (): Promise<boolean> => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+        Alert.alert(
+            'Permiso de Galería Denegado',
+            'Necesitas otorgar permisos para acceder a la galería.'
+        );
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Abre la cámara para tomar una foto.
+ * @returns URI de la imagen tomada o null si fue cancelado.
+ */
+export const takePhoto = async (): Promise<string | null> => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) return null;
+
+    const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+        return result.assets[0].uri;
+    }
+
+    return null;
+};
+
+/**
+ * Abre la galería para seleccionar una imagen.
+ * @returns URI de la imagen seleccionada o null si fue cancelado.
+ */
+export const choosePhoto = async (): Promise<string | null> => {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) return null;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+        return result.assets[0].uri;
+    }
+
+    return null;
+};
+
+
+/**
+ * Actualiza la imagen de perfil del usuario.
+ * @param uri URI de la nueva imagen de perfil.
+ * @returns Nueva URL de la imagen de perfil.
+ */
+export const updateProfileImage = async (uri: string): Promise<string> => {
+    try {
+        const token = await AsyncStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('No se encontró el token de autenticación.');
+        }
+
+        const formData = new FormData();
+        const filename = uri.split('/').pop() || 'profile.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append('profile_image', {
+            uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+            name: filename,
+            type,
+        } as any);
+
+        const response = await axios.put<{ profile_image_url: string }>(`${API_URL}/profile/image`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            },
+            timeout: 5000,
+        });
+
+        if (response.status === 200) {
+            return response.data.profile_image_url;
+        } else {
+            throw new Error('No se pudo actualizar la imagen de perfil.');
+        }
+    } catch (error: any) {
+        if (isAxiosErrorWithResponse(error)) {
+            if (error.response.status === 401) {
+                throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+            }
+            throw new Error(error.response.data.msg || 'Error al actualizar la imagen de perfil.');
+        } else if (error instanceof Error) {
+            throw new Error(error.message);
+        } else {
+            throw new Error('Ocurrió un error desconocido al actualizar la imagen de perfil.');
+        }
+    }
+};
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Services/userServices.tsx
+
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { ProfileData } from '../Types/userTypes';
+
+const API_URL = 'http://192.168.1.45:6969';
+
+/**
+ * Type guard para verificar si el error es de Axios con una respuesta.
+ * @param error Error a verificar.
+ */
+export function isAxiosErrorWithResponse(
+    error: any
+): error is { response: { status: number; data: any } } {
+    return (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        'status' in error.response &&
+        'data' in error.response
+    );
+}
+
+/**
+ * Obtiene los datos del perfil del usuario.
+ * @returns Datos del perfil del usuario.
+ */
+export const getProfile = async (): Promise<ProfileData> => {
+    try {
+        const token = await AsyncStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('No se encontró el token de autenticación.');
+        }
+
+        const response = await axios.get<ProfileData>(`${API_URL}/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 5000,
+        });
+
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error('No se pudieron obtener los datos del perfil.');
+        }
+    } catch (error: any) {
+        if (isAxiosErrorWithResponse(error)) {
+            if (error.response.status === 401) {
+                throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+            }
+            throw new Error(error.response.data.msg || 'Error al obtener los datos del perfil.');
+        } else if (error instanceof Error) {
+            throw new Error(error.message);
+        } else {
+            throw new Error('Ocurrió un error desconocido al obtener el perfil.');
+        }
+    }
+};
+
+/**
+ * Refresca los datos del perfil del usuario.
+ * @returns Datos actualizados del perfil.
+ */
+export const refreshProfile = async (): Promise<ProfileData> => {
+    // Funciona igual que getProfile, añadir lógica adicional si es necesario
+    return await getProfile();
+};
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Auth/AuthComponents/customButton.tsx
+
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps } from 'react-native';
+import { COLORS } from '../../../Constants/colors';
+
+interface CustomButtonProps extends TouchableOpacityProps {
+    title: string;
+    backgroundColor?: string;
+    textColor?: string;
+}
+
+const CustomButton: React.FC<CustomButtonProps> = ({
+    onPress,
+    title,
+    backgroundColor = COLORS.buttonColor,
+    textColor = COLORS.buttonText,
+    style,
+    ...rest
+}) => (
+    <TouchableOpacity
+        style={[styles.button, { backgroundColor }, style]}
+        onPress={onPress}
+        {...rest}
+    >
+        <Text style={[styles.buttonText, { color: textColor }]}>{title}</Text>
+    </TouchableOpacity>
+);
+
+export default CustomButton;
+
+const styles = StyleSheet.create({
+    button: {
+        padding: 15,
+        borderRadius: 15,
+        alignItems: 'center',
+        marginTop: 25,
+    },
+    buttonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Auth/AuthComponents/customInput.tsx
+
+import React from 'react';
+import { View, TextInput, StyleSheet, Text, KeyboardTypeOptions } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Control, Controller, FieldValues, Path } from 'react-hook-form';
+import { COLORS } from '../../../Constants/colors';
+
+interface CustomInputProps<T extends FieldValues> {
+    control: Control<T>;
+    name: Path<T>;
+    rules?: any;
+    placeholder: string;
+    iconName: string;
+    secureTextEntry?: boolean;
+    keyboardType?: KeyboardTypeOptions;
+    maxLength?: number;
+}
+
+const CustomInput = <T extends FieldValues>({
+    control,
+    name,
+    rules,
+    placeholder,
+    iconName,
+    secureTextEntry = false,
+    keyboardType = 'default',
+    maxLength,
+}: CustomInputProps<T>) => (
+    <Controller
+        control={control}
+        name={name}
+        rules={rules}
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+            <>
+                <View style={styles.inputContainer}>
+                    <Icon name={iconName} size={20} color={COLORS.icon} style={styles.icon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder={placeholder}
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        secureTextEntry={secureTextEntry}
+                        keyboardType={keyboardType}
+                        autoCapitalize="none"
+                        maxLength={maxLength}
+                        accessibilityLabel={placeholder}
+                    />
+                </View>
+                {error && <Text style={styles.errorText}>{error.message}</Text>}
+            </>
+        )}
+    />
+);
+
+export default CustomInput;
+
+const styles = StyleSheet.create({
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderColor: '#000',
+        marginBottom: 15,
+        paddingVertical: 5,
+    },
+    icon: {
+        marginRight: 10,
+    },
+    input: {
+        flex: 1,
+        height: 40,
+        fontSize: 16,
+        color: COLORS.text,
+    },
+    errorText: {
+        color: COLORS.error,
+        marginBottom: 10,
+        marginLeft: 5,
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Auth/login.tsx
+
+import React, { useState } from 'react';
+import {
+    View,
+    TextInput,
+    Button,
+    Text,
+    Image,
+    TouchableOpacity,
+    Alert,
+    StyleSheet,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Loader from '../ScreensComponents/loader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { loginUser } from '../../Services/authServices';
+import { StackScreenProps } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { LoginResponse, LoginData } from '../../Types/formTypes';
+import { RootStackParamList } from '../../Types/navigationTypes';
+
+type Props = StackScreenProps<RootStackParamList, 'Login'>;
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
+    const [user, setUser] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const hacerLogin = async () => {
+        const userData: LoginData = {
+            username: user,
+            password: password,
+        };
+
+        if (!user || !password) {
+            Alert.alert('Error', 'Por favor, completa todos los campos.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response: LoginResponse = await loginUser(userData);
+            const token = response.access_token;
+            await AsyncStorage.setItem('access_token', token);
+            navigation.replace('HomeTabs');
+        } catch (error: any) {
+            console.error('Error en el login:', error);
+
+            let errorMsg = 'Ocurrió un error inesperado.';
+
+            if (error.message) {
+                errorMsg = error.message;
+            } else {
+                errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+            }
+
+            Alert.alert('Error', errorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const goToSignup = () => {
+        navigation.navigate('Signup');
+    };
+
+    const goToRecovery = () => {
+        navigation.navigate('Recovery');
+    };
+
+    return (
+        <LinearGradient
+            colors={['#ffffff', '#909090']}
+            style={styles.safeArea}
+            start={{ x: 0.5, y: 1 }}
+            end={{ x: 1, y: 0.75 }}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Inicio de Sesión</Text>
+                    <Image
+                        source={require('../../Assets/Images/240509_Too_Logo_Gris_Oscuro.png')}
+                        style={styles.image}
+                        resizeMode="contain"
+                    />
+                    <View style={styles.inputContainer}>
+                        <Icon name="user" size={20} color="#000" style={styles.icon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Correo electrónico"
+                            value={user}
+                            onChangeText={setUser}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Icon name="lock" size={20} color="#000" style={styles.icon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Contraseña"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                            <Icon
+                                name={showPassword ? 'eye-slash' : 'eye'}
+                                size={20}
+                                color="#000"
+                                style={styles.icon}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.buttonContainer}>
+                        <Button title="Login" onPress={hacerLogin} />
+                    </View>
+                    <TouchableOpacity onPress={goToSignup}>
+                        <Text style={styles.signupText}>¿No formas parte? Únete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={goToRecovery}>
+                        <Text style={styles.recoveryText}>¿Olvidaste la contraseña? Recupérala</Text>
+                    </TouchableOpacity>
+                </View>
+                {/* Agrega el Loader */}
+                <Loader visible={loading} message="Iniciando sesión..." />
+            </SafeAreaView>
+        </LinearGradient>
+    );
+};
+
+export default LoginScreen;
+
+const styles = StyleSheet.create({
+    safeArea: { flex: 1 },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+        borderBottomWidth: 1,
+        borderColor: '#000',
+        width: 300,
+    },
+    input: {
+        height: 40,
+        flex: 1,
+        paddingHorizontal: 10,
+    },
+    icon: { paddingHorizontal: 10 },
+    title: {
+        fontSize: 24,
+        marginBottom: 20,
+        textAlign: 'center',
+        color: '#333',
+    },
+    image: {
+        width: 200,
+        height: 150,
+        marginBottom: 20,
+    },
+    buttonContainer: {
+        width: 210,
+        marginTop: 20,
+    },
+    signupText: {
+        marginTop: 65,
+        color: '#0000EE',
+        textDecorationLine: 'underline',
+    },
+    recoveryText: {
+        marginTop: 30,
+        color: '#0000EE',
+        textDecorationLine: 'underline',
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Auth/recovery.tsx
+
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    Alert,
+    StyleSheet,
+    KeyboardTypeOptions,
+    Button,
+} from 'react-native';
+import Loader from '../ScreensComponents/loader';
+import CustomInput from './AuthComponents/customInput';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { useForm } from 'react-hook-form';
+import { StackScreenProps } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { RootStackParamList } from '../../Types/navigationTypes';
+import { RecoveryFormData } from '../../Types/formTypes';
+import { requestPasswordReset, confirmPasswordReset } from '../../Services/authServices';
+
+type Props = StackScreenProps<RootStackParamList, 'Recovery'>;
+
+const RecoveryScreen: React.FC<Props> = ({ navigation }) => {
+    const { control, handleSubmit, formState: { errors }, watch } = useForm<RecoveryFormData>();
+
+    const [step, setStep] = useState<'email' | 'code' | 'new_password'>('email');
+    const [email, setEmail] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+
+    // Funciones para cada paso del proceso de recuperación
+
+    // Enviar código al email
+    const onSubmitEmail = async (data: RecoveryFormData) => {
+        setLoading(true);
+        try {
+            await requestPasswordReset(data.email);
+            setEmail(data.email);
+            setStep('code');
+            Alert.alert('Éxito', 'Se ha enviado un correo con el código de restablecimiento.');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Verificar código
+    const onSubmitCode = async (data: RecoveryFormData) => {
+        setLoading(true);
+        try {
+            // verificar el código en el backend
+            setStep('new_password');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Restablecer contraseña
+    const onSubmitPassword = async (data: RecoveryFormData) => {
+        if (data.new_password !== data.confirm_password) {
+            Alert.alert('Error', 'Las contraseñas no coinciden.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await confirmPasswordReset(email, data.code || '', data.new_password || '');
+            Alert.alert('Éxito', 'Tu contraseña ha sido actualizada correctamente.');
+            navigation.navigate('Login');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <LinearGradient
+            colors={['#ffffff', '#909090']}
+            style={styles.container}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 1, y: 1 }}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.contentContainer}>
+                    <Text style={styles.title}>Restablecer Contraseña</Text>
+
+                    {/* Mostrar Loader */}
+                    <Loader visible={loading} message="Procesando..." />
+
+                    {!loading && step === 'email' && (
+                        <View style={styles.formContainer}>
+                            <CustomInput
+                                control={control}
+                                name="email"
+                                placeholder="Correo Electrónico"
+                                iconName="envelope"
+                                keyboardType="email-address"
+                                rules={{
+                                    required: 'El email es obligatorio',
+                                    pattern: {
+                                        value: /^\S+@\S+\.\S+$/,
+                                        message: 'Ingresa un email válido',
+                                    },
+                                }}
+                            />
+
+                            <Button
+                                title="Enviar Código"
+                                onPress={handleSubmit(onSubmitEmail)}
+                            />
+                        </View>
+                    )}
+
+                    {!loading && step === 'code' && (
+                        <View style={styles.formContainer}>
+                            <Text style={styles.subtitle}>Ingresa el código de 6 dígitos enviado a tu email</Text>
+                            <CustomInput
+                                control={control}
+                                name="code"
+                                placeholder="Código"
+                                iconName="key"
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                rules={{
+                                    required: 'El código es obligatorio',
+                                    pattern: {
+                                        value: /^\d{6}$/,
+                                        message: 'El código debe tener 6 dígitos',
+                                    },
+                                }}
+                            />
+
+                            <Button
+                                title="Verificar Código"
+                                onPress={handleSubmit(onSubmitCode)}
+                            />
+                        </View>
+                    )}
+
+                    {!loading && step === 'new_password' && (
+                        <View style={styles.formContainer}>
+                            <CustomInput
+                                control={control}
+                                name="new_password"
+                                placeholder="Nueva Contraseña"
+                                iconName="lock"
+                                secureTextEntry
+                                rules={{
+                                    required: 'La nueva contraseña es obligatoria',
+                                    minLength: {
+                                        value: 8,
+                                        message: 'La contraseña debe tener al menos 8 caracteres',
+                                    },
+                                    pattern: {
+                                        value: /^(?=.*[A-Z])(?=.*\d).+$/,
+                                        message: 'La contraseña debe tener al menos una mayúscula y un número',
+                                    },
+                                }}
+                            />
+                            <CustomInput
+                                control={control}
+                                name="confirm_password"
+                                placeholder="Confirmar Nueva Contraseña"
+                                iconName="lock"
+                                secureTextEntry
+                                rules={{
+                                    required: 'Confirmar contraseña es obligatorio',
+                                    validate: (value: KeyboardTypeOptions | undefined) =>
+                                        value === watch('new_password') || 'Las contraseñas no coinciden',
+                                }}
+                            />
+
+                            <Button
+                                title="Restablecer Contraseña"
+                                onPress={handleSubmit(onSubmitPassword)}
+                            />
+                        </View>
+                    )}
+                </View>
+            </SafeAreaView>
+        </LinearGradient>
+    );
+
+};
+
+export default RecoveryScreen;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    contentContainer: {
+        width: '100%',
+        maxWidth: 400,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center',
+        color: '#333',
+    },
+    subtitle: {
+        fontSize: 16,
+        marginBottom: 10,
+        textAlign: 'center',
+        color: '#333',
+    },
+    formContainer: {
+        marginTop: 10,
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Auth/signup.tsx
+
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    Button,
+    Image,
+    TouchableOpacity,
+    Alert,
+    StyleSheet,
+} from 'react-native';
+import Modal from '../ScreensComponents/modal';
+import Loader from '../ScreensComponents/loader';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useForm, Controller } from 'react-hook-form';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StackScreenProps } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { signupUser } from '../../Services/authServices';
+import { RootStackParamList } from '../../Types/navigationTypes';
+import { takePhoto, choosePhoto } from '../../Services/imageServices';
+import { SignupData, SignupFormInputs, SignupResponse } from '../../Types/formTypes';
+
+type Props = StackScreenProps<RootStackParamList, 'Signup'>;
+
+const SignupScreen: React.FC<Props> = ({ navigation }) => {
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isSubmitted },
+        watch,
+        setError,
+        clearErrors,
+    } = useForm<SignupFormInputs>();
+
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+    const [date, setDate] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+    const [loading, setLoading] = useState(false);
+
+    /**
+     * Actualiza la imagen de perfil seleccionada.
+     * @param uri URI de la imagen seleccionada.
+     */
+    const handleUpdateProfileImage = (uri: string) => {
+        setProfileImage(uri);
+        clearErrors('profileImage');
+    };
+
+    /**
+     * Maneja la captura de una nueva foto.
+     */
+    const handleTakePhoto = async () => {
+        setIsModalVisible(false);
+        const uri = await takePhoto();
+        if (uri) {
+            handleUpdateProfileImage(uri);
+        }
+    };
+
+    /**
+     * Maneja la selección de una foto desde la galería.
+     */
+    const handlePickFromGallery = async () => {
+        setIsModalVisible(false);
+        const uri = await choosePhoto();
+        if (uri) {
+            handleUpdateProfileImage(uri);
+        }
+    };
+
+    /**
+     * Muestra el selector de fecha de nacimiento.
+     */
+    const showDatePickerHandler = () => {
+        setShowDatePicker(true);
+    };
+
+    /**
+     * Maneja el cambio de fecha en el DateTimePicker.
+     */
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setDate(selectedDate);
+            clearErrors('date');
+        }
+    };
+
+    /**
+     * Maneja el envío del formulario de registro.
+     * @param data Datos del formulario.
+     */
+    const onSubmit = async (data: SignupFormInputs) => {
+        clearErrors(['profileImage', 'date']);
+
+        let valid = true;
+
+        // Validar imagen de perfil
+        if (!profileImage) {
+            setError('profileImage', {
+                type: 'manual',
+                message: 'Debe seleccionar una imagen de perfil.',
+            });
+            valid = false;
+        }
+
+        // Validar fecha de nacimiento
+        if (!date) {
+            setError('date', {
+                type: 'manual',
+                message: 'Debe seleccionar una fecha de nacimiento.',
+            });
+            valid = false;
+        } else {
+            const today = new Date();
+            const ageDifMs = today.getTime() - date.getTime();
+            const ageDate = new Date(ageDifMs);
+            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            if (age < 18) {
+                setError('date', {
+                    type: 'manual',
+                    message: 'Debes ser mayor de 18 años para registrarte.',
+                });
+                valid = false;
+            }
+        }
+
+        // Validar contraseñas
+        if (data.password !== data.confirmPassword) {
+            setError('confirmPassword', {
+                type: 'manual',
+                message: 'Las contraseñas no coinciden',
+            });
+            valid = false;
+        }
+
+        if (!valid) {
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const formData: SignupData = {
+                nombre: data.nombre,
+                apellidos: data.apellidos,
+                dni: data.dni,
+                fecha_nacimiento: date!.toISOString().split('T')[0],
+                email: data.email,
+                password: data.password,
+                profile_image: {
+                    uri: profileImage!,
+                    name: profileImage!.split('/').pop() || 'profile.jpg',
+                    type: 'image/jpeg',
+                },
+                confirmPassword: data.confirmPassword,
+            };
+
+            const response: SignupResponse = await signupUser(formData);
+
+            Alert.alert('Éxito', 'Usuario registrado exitosamente');
+            navigation.replace('Login');
+        } catch (error: any) {
+            console.error('Error en el proceso de registro:', error);
+
+            let errorMsg = 'Error en el proceso de registro';
+
+            if (error.message) {
+                errorMsg = error.message;
+            } else {
+                errorMsg = 'No se pudo conectar con el servidor. Verifica tu conexión.';
+            }
+
+            Alert.alert('Error', errorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <LinearGradient colors={['#ffffff', '#808080']} style={styles.container}>
+            <SafeAreaView>
+                <Text style={styles.title}>Crea tu cuenta</Text>
+
+                <View style={styles.imageSection}>
+                    <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.imageContainer}>
+                        {profileImage ? (
+                            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+                        ) : (
+                            <Image
+                                source={require('../../Assets/Images/select_profile.png')}
+                                style={styles.profileImage}
+                            />
+                        )}
+                    </TouchableOpacity>
+                    {errors.profileImage?.message && isSubmitted && (
+                        <Text style={styles.errorImage}>{errors.profileImage.message}</Text>
+                    )}
+                </View>
+
+                {/* Modal para seleccionar imagen */}
+                <Modal
+                    visible={isModalVisible}
+                    onClose={() => setIsModalVisible(false)}
+                    onTakePhoto={handleTakePhoto}
+                    onPickFromGallery={handlePickFromGallery}
+                />
+
+                {/* Selector de Fecha de Nacimiento */}
+                <TouchableOpacity
+                    onPress={showDatePickerHandler}
+                    style={styles.inputContainer}
+                >
+                    <Text style={[styles.text, { color: date ? '#303030' : 'gray' }]}>
+                        {date ? date.toLocaleDateString() : 'Fecha de nacimiento'}
+                    </Text>
+                    <Icon name="calendar" size={20} color="#000" style={styles.icon} />
+                </TouchableOpacity>
+                {errors.date?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.date.message}</Text>
+                )}
+
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={date || new Date()}
+                        mode="date"
+                        display="default"
+                        onChange={onDateChange}
+                        maximumDate={new Date()}
+                    />
+                )}
+
+                {/* Campo DNI */}
+                <Controller
+                    control={control}
+                    name="dni"
+                    rules={{
+                        required: 'Este campo es obligatorio',
+                        pattern: {
+                            value: /^[0-9]{8}[A-Za-z]$/,
+                            message: 'El DNI debe tener 8 dígitos y una letra al final',
+                        },
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                            style={styles.input}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            placeholder="DNI"
+                            keyboardType="default"
+                            autoCapitalize="characters"
+                        />
+                    )}
+                />
+                {errors.dni?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.dni.message}</Text>
+                )}
+
+                {/* Campo Nombre */}
+                <Controller
+                    control={control}
+                    name="nombre"
+                    rules={{ required: 'Este campo es obligatorio' }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                            style={styles.input}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            placeholder="Nombre"
+                        />
+                    )}
+                />
+                {errors.nombre?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.nombre.message}</Text>
+                )}
+
+                {/* Campo Apellidos */}
+                <Controller
+                    control={control}
+                    name="apellidos"
+                    rules={{ required: 'Este campo es obligatorio' }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                            style={styles.input}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            placeholder="Apellidos"
+                        />
+                    )}
+                />
+                {errors.apellidos?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.apellidos.message}</Text>
+                )}
+
+                {/* Campo Email */}
+                <Controller
+                    control={control}
+                    name="email"
+                    rules={{
+                        required: 'Este campo es obligatorio',
+                        pattern: {
+                            value: /^\S+@\S+\.\S+$/,
+                            message: 'Ingrese un correo válido',
+                        },
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                            style={styles.input}
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            placeholder="Correo Electrónico"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    )}
+                />
+                {errors.email?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.email.message}</Text>
+                )}
+
+                {/* Campo Contraseña */}
+                <Controller
+                    control={control}
+                    name="password"
+                    rules={{
+                        required: 'Este campo es obligatorio',
+                        minLength: {
+                            value: 8,
+                            message: 'La contraseña debe tener al menos 8 caracteres',
+                        },
+                        validate: (value) => {
+                            const hasUpperCase = /[A-Z]/.test(value);
+                            const hasLowerCase = /[a-z]/.test(value);
+
+                            if (!hasUpperCase) {
+                                return 'La contraseña debe contener al menos una letra mayúscula';
+                            }
+                            if (!hasLowerCase) {
+                                return 'La contraseña debe contener al menos una letra minúscula';
+                            }
+                            return true;
+                        },
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.inputWithoutBorder, styles.text]}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                placeholder="Contraseña"
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                <Icon
+                                    name={showPassword ? 'eye-slash' : 'eye'}
+                                    size={20}
+                                    color="#000"
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
+                {errors.password?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.password.message}</Text>
+                )}
+
+                {/* Campo Confirmar Contraseña */}
+                <Controller
+                    control={control}
+                    name="confirmPassword"
+                    rules={{
+                        required: 'Confirmar contraseña es obligatorio',
+                        validate: (value) => {
+                            if (value !== watch('password')) {
+                                return 'Las contraseñas no coinciden';
+                            }
+                            return true;
+                        },
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.inputWithoutBorder, styles.text]}
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                placeholder="Repetir Contraseña"
+                                secureTextEntry={!showConfirmPassword}
+                            />
+                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                <Icon
+                                    name={showConfirmPassword ? 'eye-slash' : 'eye'}
+                                    size={20}
+                                    color="#000"
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
+                {errors.confirmPassword?.message && isSubmitted && (
+                    <Text style={styles.error}>{errors.confirmPassword.message}</Text>
+                )}
+
+                <View style={styles.buttonContainer}>
+                    <Button title="Registrar" onPress={handleSubmit(onSubmit)} />
+                </View>
+            </SafeAreaView>
+            <Loader visible={loading} message="Registrando usuario..." />
+        </LinearGradient>
+    );
+};
+export default SignupScreen;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        textAlign: 'center',
+    },
+    text: {
+        fontSize: 14,
+        paddingHorizontal: 9,
+        color: '#303030',
+    },
+    input: {
+        height: 40,
+        borderBottomWidth: 1,
+        borderColor: 'gray',
+        marginBottom: 12,
+        paddingHorizontal: 10,
+        backgroundColor: 'transparent',
+        width: '100%',
+        color: '#303030',
+    },
+    inputWithoutBorder: {
+        flex: 1,
+        paddingHorizontal: 10,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderColor: 'gray',
+        width: '100%',
+    },
+    icon: {
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+    },
+    error: {
+        color: 'red',
+        marginBottom: 10,
+    },
+    errorImage: {
+        color: 'red',
+        marginTop: 5,
+        textAlign: 'center',
+    },
+    imageSection: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    imageContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 10,
+    },
+    buttonContainer: { marginTop: 20 },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Navigation/navigator.tsx
+
+import React from 'react';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { RootStackParamList, TabParamList } from '../../Types/navigationTypes';
+
+// Importar las pantallas
+import LoginScreen from '../Auth/login';
+import SignupScreen from '../Auth/signup';
+import RecoveryScreen from '../Auth/recovery';
+import ProfileScreen from '../Pantallas/profile';
+import SettingsScreen from '../Pantallas/settings';
+import ContractsScreen from '../Pantallas/contracts';
+
+// Crear los navegadores con los tipos
+const Tab = createBottomTabNavigator<TabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// HomeTabs con Acuerdos, Perfil y Ajustes
+const HomeTabs = () => (
+    <Tab.Navigator
+        initialRouteName="Perfil"
+        screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+                let iconName: string = '';
+                if (route.name === 'Acuerdos') {
+                    iconName = focused ? 'document' : 'document-outline';
+                } else if (route.name === 'Perfil') {
+                    iconName = focused ? 'person' : 'person-outline';
+                } else if (route.name === 'Ajustes') {
+                    iconName = focused ? 'settings' : 'settings-outline';
+                }
+                return <Icon name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: 'blue',
+            tabBarInactiveTintColor: 'gray',
+            headerShown: false,
+            tabBarStyle: { paddingBottom: 5 },
+        })}
+    >
+        <Tab.Screen name="Acuerdos" component={ContractsScreen} />
+        <Tab.Screen name="Perfil" component={ProfileScreen} />
+        <Tab.Screen name="Ajustes" component={SettingsScreen} />
+    </Tab.Navigator>
+);
+
+const AppNavigator = () => (
+    <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+            {/* Pantallas de autenticación */}
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="Recovery" component={RecoveryScreen} />
+            {/* Pantallas principales */}
+            <Stack.Screen name="HomeTabs" component={HomeTabs} />
+        </Stack.Navigator>
+    </NavigationContainer>
+);
+
+export default AppNavigator;
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/App/Screens/Pantallas/contracts.tsx
+
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const ContractsScreen = () => {
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Pantalla de Acuerdos pasados y actuales</Text>
+        </View>
+    );
+};
+
+export default ContractsScreen;
+
+const styles = StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    title: { fontSize: 24 },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/Pantallas/profile.tsx
+
+import React, { useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    Image,
+    TouchableOpacity,
+    Alert,
+    StyleSheet,
+} from 'react-native';
+import Modal from '../ScreensComponents/modal';
+import Loader from '../ScreensComponents/loader';
+
+import { ProfileData } from '../../Types/userTypes';
+import { LinearGradient } from 'expo-linear-gradient';
+import { TabScreenProps } from '../../Types/navigationTypes';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { getProfile, refreshProfile } from '../../Services/userServices';
+import { takePhoto, choosePhoto, updateProfileImage } from '../../Services/imageServices';
+
+type Props = TabScreenProps<'Perfil'>;
+
+const ProfileScreen: React.FC<Props> = ({ navigation }) => {
+    const [profileData, setProfileData] = useState<{
+        firstName: string;
+        lastName: string;
+        dni: string;
+        birthDate: string;
+        email: string;
+        profileImage: string | null;
+    }>({
+        firstName: '',
+        lastName: '',
+        dni: '',
+        birthDate: '',
+        email: '',
+        profileImage: null,
+    });
+    const [loading, setLoading] = useState(true);
+    const [imageReloadAttempted, setImageReloadAttempted] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState<boolean>(false); // Estado para controlar la visibilidad del Modal
+
+    /**
+     * Función para obtener los datos del perfil del usuario.
+     */
+    const fetchProfileData = async () => {
+        const MINIMUM_LOADING_TIME = 1000;
+        const startTime = Date.now();
+
+        try {
+            const data: ProfileData = await getProfile();
+
+            setProfileData({
+                firstName: data.nombre,
+                lastName: data.apellido,
+                dni: data.dni,
+                birthDate: data.fecha_nacimiento,
+                email: data.email,
+                profileImage: data.profile_image_url,
+            });
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        } finally {
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = MINIMUM_LOADING_TIME - elapsedTime;
+            if (remainingTime > 0) {
+                setTimeout(() => setLoading(false), remainingTime);
+            } else {
+                setLoading(false);
+            }
+        }
+    };
+
+    /**
+     * Función para actualizar la imagen de perfil.
+     * @param uri URI de la nueva imagen.
+     */
+    const handleUpdateProfileImage = async (uri: string) => {
+        setLoading(true);
+        try {
+            const newProfileImageUrl = await updateProfileImage(uri);
+            setProfileData((prevState) => ({
+                ...prevState,
+                profileImage: newProfileImageUrl,
+            }));
+            Alert.alert('Éxito', 'Imagen de perfil actualizada correctamente.');
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /**
+     * Función para manejar la selección de imagen (tomar foto o elegir de la galería).
+     * Utiliza las funciones del servicio imagesServices.tsx
+     */
+    const handleTakePhoto = async () => {
+        setIsModalVisible(false);
+        const uri = await takePhoto();
+        if (uri) {
+            await handleUpdateProfileImage(uri);
+        }
+    };
+
+    const handlePickFromGallery = async () => {
+        setIsModalVisible(false);
+        const uri = await choosePhoto();
+        if (uri) {
+            await handleUpdateProfileImage(uri);
+        }
+    };
+
+    /**
+     * Función para manejar la generación de QR (en desarrollo).
+     */
+    const handleGenerateQR = () => {
+        Alert.alert('Función Generar QR', 'Esta función está en desarrollo.');
+    };
+
+    /**
+     * Función para manejar el escaneo de QR (en desarrollo).
+     */
+    const handleScanQR = () => {
+        Alert.alert('Función Escanear QR', 'Esta función está en desarrollo.');
+    };
+
+    useEffect(() => {
+        fetchProfileData();
+    }, []);
+
+    useEffect(() => {
+        if (imageReloadAttempted) {
+            setImageReloadAttempted(false);
+        }
+    }, [profileData.profileImage]);
+
+    return (
+        <LinearGradient
+            colors={['#ffffff', '#d2f1e6']}
+            style={styles.safeArea}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 1, y: 0.5 }}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Perfil</Text>
+
+                    <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.imageContainer}>
+                        {profileData.profileImage ? (
+                            <Image
+                                source={{ uri: profileData.profileImage }}
+                                style={styles.profileImage}
+                                onError={async (e) => {
+                                    console.error('Error cargando la imagen:', e.nativeEvent.error);
+
+                                    if (!imageReloadAttempted) {
+                                        setImageReloadAttempted(true);
+                                        try {
+                                            const refreshedData = await refreshProfile();
+                                            setProfileData({
+                                                ...profileData,
+                                                profileImage: refreshedData.profile_image_url,
+                                            });
+                                        } catch (error: any) {
+                                            Alert.alert('Error', error.message);
+                                        }
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <Image
+                                source={require('../../Assets/Images/profile.jpg')}
+                                style={styles.profileImage}
+                                onError={(e) =>
+                                    console.error(
+                                        'Error cargando la imagen por defecto:',
+                                        e.nativeEvent.error
+                                    )
+                                }
+                            />
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Modal */}
+                    <Modal
+                        visible={isModalVisible}
+                        onClose={() => setIsModalVisible(false)}
+                        onTakePhoto={handleTakePhoto}
+                        onPickFromGallery={handlePickFromGallery}
+                    />
+
+                    <View style={styles.shadowContainer}>
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.labelTitle}>Nombre:</Text>
+                            <Text style={styles.label}>{profileData.firstName}</Text>
+                        </View>
+
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.labelTitle}>Apellidos:</Text>
+                            <Text style={styles.label}>{profileData.lastName}</Text>
+                        </View>
+
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.labelTitle}>DNI:</Text>
+                            <Text style={styles.label}>{profileData.dni}</Text>
+                        </View>
+
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.labelTitle}>Fecha de Nacimiento:</Text>
+                            <Text style={styles.label}>{profileData.birthDate}</Text>
+                        </View>
+
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.labelTitle}>Correo Electrónico:</Text>
+                            <Text style={styles.label}>{profileData.email}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.button} onPress={handleGenerateQR}>
+                            <Text style={styles.buttonText}>Generar QR</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={handleScanQR}>
+                            <Text style={styles.buttonText}>Escanear QR</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                {/* Agrega el Loader */}
+                <Loader visible={loading} message="Procesando..." />
+            </SafeAreaView>
+        </LinearGradient>
+    );
+
+};
+export default ProfileScreen;
+
+const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+    },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 40,
+        alignSelf: 'flex-start',
+    },
+    imageContainer: {
+        marginBottom: 20,
+        position: 'relative',
+    },
+    profileImage: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        borderColor: '#000',
+        borderWidth: 5,
+        resizeMode: 'cover',
+        marginBottom: 20,
+    },
+    shadowContainer: {
+        width: '100%',
+        padding: 15,
+        borderRadius: 10,
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.9,
+        shadowRadius: 2,
+        elevation: 5,
+        marginBottom: 20,
+    },
+    labelContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+        width: '100%',
+    },
+    labelTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    label: {
+        fontSize: 16,
+        color: '#333',
+        textAlign: 'right',
+    },
+    buttonContainer: {
+        marginTop: 20,
+        width: '100%',
+        justifyContent: 'space-between',
+    },
+    button: {
+        backgroundColor: '#4CAF50',
+        padding: 15,
+        borderRadius: 10,
+        marginVertical: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#000',
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+//Frontend/App/Screens/Pantallas/settings.tsx
+
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
+
+import { TabScreenProps } from '../../Types/navigationTypes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+type Props = TabScreenProps<'Ajustes'>;
+
+const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+    const [showTerms, setShowTerms] = useState(false);
+
+    const handleToggleTerms = () => {
+        setShowTerms(!showTerms);
+    };
+
+    const handleContact = () => {
+        Alert.alert('Contacto', 'Contacto para denuncias: contacto@empresa.com');
+    };
+
+    const handleLogout = async () => {
+        try {
+            await AsyncStorage.removeItem('access_token');
+
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' as never }],
+            });
+
+            Alert.alert('Sesión cerrada', 'Has cerrado sesión exitosamente.');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            Alert.alert('Error', 'No se pudo cerrar la sesión. Por favor, intenta nuevamente.');
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Ajustes</Text>
+
+                    <TouchableOpacity
+                        onPress={handleToggleTerms}
+                        style={styles.toggleButton}
+                    >
+                        <Text style={styles.toggleButtonText}>Términos y Condiciones</Text>
+                    </TouchableOpacity>
+                    {showTerms && (
+                        <View style={styles.termsContainer}>
+                            <Text style={styles.termsText}>
+                                Estos son los términos y condiciones de uso de la aplicación. Al
+                                utilizarla, aceptas cumplir con las normas y regulaciones de la
+                                plataforma...
+                                {/* Aquí se debe añadir el texto completo de los términos */}
+                            </Text>
+                        </View>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.contactButton}
+                        onPress={handleContact}
+                    >
+                        <Text style={styles.buttonText}>Contacto para Denuncias</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.logoutButton}
+                        onPress={handleLogout}
+                    >
+                        <Text style={styles.buttonText}>Cerrar Sesión</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+};
+
+export default SettingsScreen;
+
+const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#f0f0f0',
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    container: { width: '90%' },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 50,
+    },
+    toggleButton: {
+        backgroundColor: '#4CAF50',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20,
+        width: '100%',
+        alignItems: 'center',
+    },
+    toggleButtonText: { color: '#fff', fontSize: 16 },
+    termsContainer: {
+        backgroundColor: '#ffffff',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20,
+        width: '100%',
+    },
+    termsText: { fontSize: 14, color: '#333' },
+    contactButton: {
+        backgroundColor: '#FF9800',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20,
+        width: '100%',
+        alignItems: 'center',
+    },
+    logoutButton: {
+        backgroundColor: '#f44336',
+        padding: 15,
+        borderRadius: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    buttonText: { color: '#fff', fontSize: 16 },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/ScreensComponents/loader.tsx
+
+import React from 'react';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+
+interface LoaderProps {
+    visible: boolean;
+    message?: string;
+}
+
+const Loader: React.FC<LoaderProps> = ({ visible, message }) => {
+    if (!visible) return null;
+
+    return (
+        <View style={styles.overlay}>
+            <View style={styles.loaderContainer}>
+                <ActivityIndicator size="large" color="#0000ff" />
+                {message && <Text style={styles.message}>{message}</Text>}
+            </View>
+        </View>
+    );
+};
+
+export default Loader;
+
+const styles = StyleSheet.create({
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loaderContainer: {
+        padding: 20,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    message: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#000',
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+// Frontend/App/Screens/ScreensComponents/modal.tsx
+
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal as RNModal } from 'react-native';
+
+interface ModalProps {
+    visible: boolean;
+    onClose: () => void;
+    onTakePhoto: () => void;
+    onPickFromGallery: () => void;
+}
+
+const Modal: React.FC<ModalProps> = ({ visible, onClose, onTakePhoto, onPickFromGallery }) => {
+    return (
+        <RNModal
+            animationType="slide"
+            transparent={true}
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalView}>
+                    <TouchableOpacity
+                        style={styles.modalButton}
+                        onPress={onTakePhoto}
+                    >
+                        <Text style={styles.modalButtonText}>Tomar foto</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.modalButton}
+                        onPress={onPickFromGallery}
+                    >
+                        <Text style={styles.modalButtonText}>Elegir de la galería</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.modalButton, styles.cancelButton]}
+                        onPress={onClose}
+                    >
+                        <Text style={styles.modalButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </RNModal>
+    );
+};
+
+export default Modal;
+
+const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalView: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        paddingVertical: 20,
+        paddingHorizontal: 30,
+        width: '80%',
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        fontSize: 16,
+        color: '#007AFF',
+    },
+    modalButton: {
+        paddingVertical: 15,
+        width: '100%',
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderColor: '#zzz',
+    },
+    cancelButton: {
+        paddingVertical: 15,
+        width: '100%',
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderColor: '#zzz',
+    },
+});
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+Backend/
+│   
+├── logs/          -->  (en .gitignore)
+├── flask_session  -->  (en .gitignore)
+├── .env           -->  (en .gitignore)
+├── env/           -->  (en .gitignore)
+├── app.py    
+├── requirements.txt 
+│
+└── src/
+    │
+    ├── config.py 
+    │
+    ├── __init__.py  
+    │       
+    ├── utils/ 
+    │       │     
+    │       ├── __init__.py     
+    │       ├── encryption.py 
+    │       └── security.py  
+    │
+    ├── services/  
+    │       │     
+    │       ├── __init__.py    
+    │       ├── room.py 
+    │       ├── password_reset.py     
+    │       ├── S3.py      
+    │       └── user.py 
+    │
+    ├── routes/ 
+    │       │     
+    │       ├── __init__.py    
+    │       ├── room.py   
+    │       └── user.py     
+    │                      
+    └── models/  
+            │     
+            ├── __init__.py    
+            ├── room.py   
+            └── user.py      
+
+-------------------------------------------------------------------------------------------------------------------
+#Backend/app.py
+ 
+from src import create_app
+
+app = create_app('development')  # Cambiar a 'production' en producción
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=6969)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/requirements.txt
+
+bcrypt==3.2.0
+blinker==1.8.2
+boto3==1.35.24
+botocore==1.35.24
+cachelib==0.13.0
+certifi==2024.7.4
+cffi==1.17.0
+charset-normalizer==3.3.2
+click==8.1.7
+colorama==0.4.6
+dnspython==2.6.1
+Flask==3.0.3
+Flask-Bcrypt==1.0.1
+Flask-Cors==5.0.0
+Flask-JWT-Extended==4.6.0
+Flask-Mail==0.10.0
+Flask-PyMongo==2.3.0
+Flask-Session==0.8.0
+idna==3.8
+itsdangerous==2.2.0
+Jinja2==3.1.4
+jmespath==1.0.1
+MarkupSafe==2.1.5
+msgspec==0.18.6
+Naked==0.1.32
+passlib==1.7.4
+pycparser==2.22
+pycryptodome==3.20.0
+PyJWT==2.9.0
+pymongo==4.8.0
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
+PyYAML==6.0.2
+redis==5.0.8
+requests==2.32.3
+s3transfer==0.10.2
+shellescape==3.8.1
+six==1.16.0
+urllib3==2.2.2
+Werkzeug==3.0.4
+-------------------------------------------------------------------------------------------------------------------
+#Backend/venv/  (en .gitignore)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/logs/  (en .gitignore)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/flask_session/  (en .gitignore)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/.env  (en .gitignore)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/__init__py
+
+from flask_cors import CORS
+from src.routes import register_blueprints
+from src.utils.encryption import decrypt_aes
+from src.config import config_by_name, init_app
+from flask import Flask, request, session, redirect, url_for
+
+def create_app(config_name):
+    app = Flask(__name__)
+    CORS(app)
+    app.config.from_object(config_by_name[config_name])
+    
+    init_app(app)
+    register_blueprints(app)
+
+    @app.after_request
+    def log_request_info(response):
+        user = session.get('username', 'Anonymous')
+        ip = request.remote_addr
+        app.logger.info(f'Email: {decrypt_aes(user)} -- Metodo: {request.method} -- Ruta: {request.path} -- IP: {ip}')
+        return response
+    
+    @app.route('/')
+    def index():
+        return redirect(url_for('login.login'))
+    
+    return app
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/config.py
+
+import os
+import logging
+from dotenv import load_dotenv
+from flask_bcrypt import Bcrypt
+from flask_pymongo import PyMongo
+from datetime import datetime, timedelta
+from flask_jwt_extended import JWTManager
+from cachelib.file import FileSystemCache
+from logging.handlers import TimedRotatingFileHandler
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+load_dotenv(os.path.join(base_dir, '.env'))
+
+class Config:
+    MONGO_URI = os.getenv('MONGO_URI')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'mysecretkey')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwtsecretkey')
+    TOKEN_EXPIRATION = int(os.getenv('TOKEN_EXPIRATION', 5))
+    AES_KEY = bytes.fromhex(os.getenv('AES_KEY'))
+
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY', 'AWS_SECRET')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET', 'AWS_SECRET')
+    AWS_REGION = os.getenv('AWS_REGION', 'AWS_REGION')
+    AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET', 'AWS_S3_BUCKET')
+
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True')
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'False')
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    PASSWORD_RESET_CODE_EXPIRATION = int(os.getenv('PASSWORD_RESET_CODE_EXPIRATION', 900))
+
+    # Configuración de la sesión en el sistema de archivos usando CacheLib
+    SESSION_FILE_DIR = os.getenv('SESSION_FILE_DIR')
+    if not os.path.isabs(SESSION_FILE_DIR):
+        SESSION_FILE_DIR = os.path.join(base_dir, SESSION_FILE_DIR)
+
+    # Verificar si el directorio de sesión existe, si no, crearlo
+    if not os.path.exists(SESSION_FILE_DIR):
+        os.makedirs(SESSION_FILE_DIR)
+
+    SESSION_CACHE = FileSystemCache(SESSION_FILE_DIR, threshold=int(os.getenv('SESSION_FILE_THRESHOLD', 100)))
+    SESSION_FILE_MODE = int(os.getenv('SESSION_FILE_MODE', 0o600), 8)
+
+    # Configuración de la vida útil de los archivos de sesión (en horas)
+    SESSION_LIFETIME_HOURS = int(os.getenv('SESSION_LIFETIME_HOURS', 24))
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=SESSION_LIFETIME_HOURS)
+
+    # Configuración de logs
+    LOG_DIR = os.getenv('LOG_DIR')
+    if not os.path.isabs(LOG_DIR):
+        LOG_DIR = os.path.join(base_dir, LOG_DIR)
+
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+
+    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+    LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES', 20 * 1024 * 1024))
+    LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT', 10))
+    LOG_LEVEL = getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper())
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    LOG_LEVEL = logging.DEBUG
+
+class ProductionConfig(Config):
+    DEBUG = False
+    LOG_LEVEL = logging.WARNING
+
+config_by_name = dict(
+    development=DevelopmentConfig,
+    production=ProductionConfig
+)
+
+jwt = JWTManager()
+mongo = PyMongo()
+bcrypt = Bcrypt()
+
+def ensure_directories_exist(app):
+    session_dir = app.config['SESSION_FILE_DIR']
+    if not os.path.exists(session_dir):
+        os.makedirs(session_dir)
+        app.logger.info(f"Directorio de sesiones creado en: {session_dir}")
+
+    log_dir = os.path.dirname(app.config['LOG_FILE'])
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+        app.logger.info(f"Directorio de logs creado en: {log_dir}")
+
+def cleanup_sessions(app):
+    now = datetime.now()
+    session_lifetime = timedelta(hours=int(os.getenv('SESSION_LIFETIME_HOURS', 24)))
+    session_dir = app.config['SESSION_FILE_DIR']
+
+    if not os.path.exists(session_dir):
+        app.logger.warning(f"Directorio de sesiones no encontrado: {session_dir}")
+        return
+
+    for session_file in os.listdir(session_dir):
+        session_path = os.path.join(session_dir, session_file)
+        if os.path.isfile(session_path):
+            file_mtime = datetime.fromtimestamp(os.path.getmtime(session_path))
+            if now - file_mtime > session_lifetime:
+                try:
+                    os.remove(session_path)
+                    app.logger.info(f"Archivo de sesión eliminado: {session_file}")
+                except Exception as e:
+                    app.logger.error(f"Error eliminando el archivo {session_file}: {str(e)}")
+
+def init_app(app):
+    ensure_directories_exist(app)
+
+    jwt.init_app(app)
+    mongo.init_app(app)
+    bcrypt.init_app(app)
+
+    file_handler = TimedRotatingFileHandler(
+        app.config['LOG_FILE'], 
+        when='midnight',
+        interval=1,  
+        backupCount=app.config['LOG_BACKUP_COUNT'] 
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s'
+    ))
+    file_handler.setLevel(app.config['LOG_LEVEL'])
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(app.config['LOG_LEVEL'])
+
+    app.logger.info('App startup')
+
+    cleanup_sessions(app)
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/utils/encryption.py
+
+import base64
+from src.config import Config
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+# Función para corregir la codificación del texto
+def correct_encoding(text):
+    try:
+        # Intentar decodificar como ISO-8859-1 y recodificar como UTF-8
+        text = text.encode('iso-8859-1').decode('utf-8')
+    except UnicodeDecodeError:
+        # Si falla, el texto ya está en UTF-8, así que no se hace nada
+        pass
+    return text
+
+def decrypt_aes(data):
+    try:
+        cipher = AES.new(Config.AES_KEY, AES.MODE_ECB)
+        decrypted = cipher.decrypt(base64.b64decode(data))
+        # Unpad y decodificación a UTF-8
+        decrypted_text = unpad(decrypted, AES.block_size).decode('utf-8')
+        return correct_encoding(decrypted_text)
+    except (UnicodeDecodeError, ValueError) as e:
+        # Manejo de errores si la decodificación falla
+        return f"Error al desencriptar: {str(e)}"
+
+def encrypt_aes(data):
+    try:
+        cipher = AES.new(Config.AES_KEY, AES.MODE_ECB)
+        # Pad y codificación a UTF-8
+        encrypted = cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
+        return base64.b64encode(encrypted).decode('utf-8')
+    except Exception as e:
+        # Manejo de errores si la encriptación falla
+        return f"Error al encriptar: {str(e)}"
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/utils/security.py
+
+import jwt
+from functools import wraps
+from flask import make_response
+from src.config import config_by_name
+from datetime import datetime, timezone, timedelta
+from flask import session, redirect, url_for, request, jsonify, current_app, g
+
+def create_access_token(data):
+    to_encode = data.copy()
+    to_encode.update({
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=config_by_name['production'].TOKEN_EXPIRATION)
+    })
+
+    return jwt.encode(to_encode, config_by_name['production'].SECRET_KEY, algorithm="HS256")
+
+def verify_token(token):
+    try:
+        payload = jwt.decode(token, config_by_name['production'].SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None 
+    except jwt.InvalidTokenError:
+        return None 
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+
+        if not token:
+            return jsonify({'message': 'Token es requerido'}), 401
+
+        try:
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+            user_id = data['_id']
+            g.user = {'_id': user_id, 'username': data['username']}
+        except Exception as e:
+            current_app.logger.error(f"Token inválido: {str(e)}")
+            return jsonify({'message': 'Token inválido'}), 401
+
+        return f(*args, **kwargs)
+    return decorated
+
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return no_cache
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/routes/__init__.py
+
+from src.routes.user import auth_bp
+from src.routes.room import rooms_bp
+
+def register_blueprints(app):
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(rooms_bp)
+-------------------------------------------------------------------------------------------------------------------
+from src.services.room import RoomService
+from flask import Blueprint, render_template, jsonify, current_app
+from src.utils.security import token_required, login_required, nocache
+
+
+rooms_bp = Blueprint('rooms', __name__)
+
+
+@rooms_bp.route('/rooms/obtener_acuerdos', methods=['POST'])
+@token_required
+def obtener_acuerdos():
+    try:
+        return RoomService.Obtener_acuerdos()
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /rooms/obtener_acuerdos: {str(e)}")
+        return jsonify({"msg": "Error al obtener acuerdos"}), 500
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/routes/user.py
+
+from src.utils import security
+from src.services.user import UserService
+from flask import Blueprint, jsonify, request, current_app
+from src.services.password_reset import PasswordResetService
+
+
+auth_bp = Blueprint('login', __name__)
+
+
+@auth_bp.route('/register', methods=['POST'])
+def signup():
+    try:
+        response = UserService.register_user(request)
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /register: {str(e)}")
+        return jsonify({"msg": "Error en el proceso de registro"}), 500
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    try:
+        response = UserService.authenticate_user(request)
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /login: {str(e)}")
+        return jsonify({"msg": "Error en el proceso de login"}), 500
+
+@auth_bp.route('/profile', methods=['GET'])
+@security.token_required
+def get_profile():
+    try:
+        response = UserService.get_user_profile()
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /profile: {str(e)}")
+        return jsonify({"msg": "Error al obtener el perfil"}), 500
+    
+@auth_bp.route('/profile/image', methods=['PUT'])
+@security.token_required
+def update_profile_image():
+    return UserService.update_profile_image(request)
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    try:
+        response = UserService.logout_user()
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /logout: {str(e)}")
+        return jsonify({"msg": "Error al cerrar la sesión"}), 500
+    
+
+@auth_bp.route('/password-reset/request', methods=['POST'])
+def request_password_reset():
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({"msg": "El email es requerido"}), 400
+
+    user = UserService.get_user_by_email(email)
+    if not user:
+        return jsonify({"msg": "No se encontró el email introducido"}), 404
+
+    reset_service = PasswordResetService()
+    code = reset_service.generate_code()
+    reset_service.store_code(email, code)
+
+    print(email,code)
+
+    if reset_service.send_reset_email(email, code):
+        return jsonify({"msg": "Se ha enviado un correo con el código de restablecimiento"}), 200
+    else:
+        return jsonify({"msg": "Error al enviar el correo de restablecimiento"}), 500
+
+
+
+@auth_bp.route('/password-reset/confirm', methods=['POST'])
+def confirm_password_reset():
+    data = request.get_json()
+    email = data.get('email')
+    code = data.get('code')
+    new_password = data.get('new_password')
+
+    if not email or not code or not new_password:
+        return jsonify({"msg": "Todos los campos son requeridos"}), 400
+
+    reset_service = PasswordResetService()
+    if not reset_service.verify_code(email, code):
+        return jsonify({"msg": "Código inválido o expirado"}), 400
+
+    if not UserService.update_user_password(email, new_password):
+        return jsonify({"msg": "Error al actualizar la contraseña"}), 500
+
+    return jsonify({"msg": "Contraseña actualizada exitosamente"}), 200
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/services/user.py
+
+import uuid
+from datetime import datetime
+from src.utils import security
+from src.services.S3 import S3Service
+from src.models.user import UserModel
+from passlib.context import CryptContext
+from werkzeug.utils import secure_filename
+from flask import session, request, current_app, jsonify, g
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserService:
+    @staticmethod
+    def register_user(request):
+
+        try:
+            data = request.form
+
+            fecha_nacimiento = data.get('fecha_nacimiento')
+            nombre = data.get('nombre')
+            apellido = data.get('apellidos')
+            dni = data.get('dni')
+            username = data.get('email')
+            password = data.get('password')
+            profile_image = request.files.get('profile_image')
+
+            if not username or not password or not nombre or not apellido or not dni or not fecha_nacimiento:
+                return jsonify({"msg": "Todos los campos son obligatorios"}), 400
+
+            existing_user = UserModel().get_user_by_username(username)
+            if existing_user:
+                return jsonify({"msg": "El email del usuario ya ha sido registrado."}), 400
+
+            hashed_password = pwd_context.hash(password)
+
+            profile_image_url = None
+            if profile_image:
+                if not profile_image.mimetype.startswith('image/'):
+                    return jsonify({"msg": "Solo se permiten archivos con formato de imagen"}), 400
+
+                unique_filename = f"{uuid.uuid4()}-{secure_filename(profile_image.filename)}"
+                profile_image_url = S3Service().upload_file(profile_image, unique_filename)
+
+            user_data = {
+                "username": username,
+                "hashed_password": hashed_password,
+                "nombre": nombre,
+                "apellido": apellido,
+                "dni": dni,
+                "fecha_nacimiento": fecha_nacimiento,
+                "profile_image_url": profile_image_url,
+                "created_at": str(datetime.utcnow())
+            }
+
+            UserModel().create_user(user_data)
+
+            current_app.logger.info(f"Usuario {username} creado exitosamente.")
+            return jsonify({"msg": "Usuario creado exitosamente"}), 201
+
+        except Exception as e:
+            current_app.logger.error(f"Error al registrar usuario {username}: {str(e)}")
+            return jsonify({"msg": "Error en el proceso de registro"}), 500
+
+    @staticmethod
+    def authenticate_user(request):
+        try:
+            data = request.json
+            username = data.get('username')
+            password = data.get('password')
+
+            if not username or not password:
+                return jsonify({"msg": "Faltan credenciales"}), 400
+
+            user = UserModel().get_user_by_username(username)
+
+            if not user or not user.get('hashed_password'):
+                return jsonify({"msg": "Credenciales inválidas"}), 401
+
+            if not UserService.verify_password(password, user['hashed_password']):
+                return jsonify({"msg": "Credenciales inválidas"}), 401
+
+            token_data = {
+                "_id": str(user['_id']),
+                "username": user['username']
+            }
+
+            token = security.create_access_token(token_data)
+
+            session['username'] = user['username']
+
+            return jsonify({
+                "access_token": token,
+                "token_type": "bearer",
+            })
+        except Exception as e:
+            current_app.logger.error(f"Error al autenticar usuario {username}: {str(e)}")
+            return jsonify({"msg": "Error en el proceso de autenticación"}), 500
+
+    @staticmethod
+    def get_user_profile():
+        try:
+            user = g.user
+
+            if user:
+                user_db = UserModel().get_user_by_id(user['_id'])
+                if user_db:
+                    profile_image_url = None
+                    if user_db.get('profile_image_url'):
+                        filename = user_db['profile_image_url'].split('/')[-1]
+                        profile_image_url = S3Service().generate_presigned_url(filename)
+
+                    user_data = {
+                        "nombre": user_db['nombre'],
+                        "apellido": user_db['apellido'],
+                        "dni": user_db['dni'],
+                        "fecha_nacimiento": user_db['fecha_nacimiento'],
+                        "email": user_db['username'],
+                        "profile_image_url": profile_image_url
+                    }
+                    return jsonify(user_data), 200
+                else:
+                    return jsonify({"msg": "No se encontró el usuario"}), 404
+            else:
+                return jsonify({"msg": "Usuario no autenticado"}), 401
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener el perfil del usuario: {str(e)}")
+            return jsonify({"msg": "Error al obtener el perfil"}), 500
+
+    @staticmethod
+    def verify_password(plain_password, hashed_password):
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception as e:
+            current_app.logger.error(f"Error al verificar la contraseña: {str(e)}")
+            return False
+
+    @staticmethod
+    def update_profile_image(request):
+        try:
+            user = g.user
+            if not user:
+                return jsonify({"msg": "Usuario no autenticado"}), 401
+
+            profile_image = request.files.get('profile_image')
+
+            if not profile_image:
+                return jsonify({"msg": "No se envió ninguna imagen"}), 400
+
+            if not profile_image.mimetype.startswith('image/'):
+                return jsonify({"msg": "Solo se permiten archivos con formato de imagen"}), 400
+            
+            user_db = UserModel().get_user_by_id(user['_id'])
+
+            if user_db.get('profile_image_url'):
+                previous_filename = user_db['profile_image_url'].split('/')[-1]
+                S3Service().delete_file(previous_filename)
+
+            unique_filename = f"{uuid.uuid4()}-{secure_filename(profile_image.filename)}"
+            profile_image_url = S3Service().upload_file(profile_image, unique_filename)
+
+            UserModel().update_user_profile_image(user['_id'], profile_image_url)
+
+            return jsonify({"msg": "Imagen de perfil actualizada correctamente", "profile_image_url": profile_image_url}), 200
+
+        except Exception as e:
+            current_app.logger.error(f"Error al actualizar la imagen de perfil del usuario {user['username']}: {str(e)}")
+            return jsonify({"msg": "Error al actualizar la imagen de perfil"}), 500
+
+    @staticmethod
+    def logout_user():
+        try:
+            username = session.get('username', 'Anonymous')
+            session.clear()
+            current_app.logger.info(f'Usuario: {username} - Cerrando sesión - IP: {request.remote_addr}')
+            return jsonify({"msg": "Sesión cerrada correctamente"}), 200
+        except Exception as e:
+            current_app.logger.error(f"Error al cerrar sesión para el usuario {username}: {str(e)}")
+            return jsonify({"msg": "Error al cerrar la sesión"}), 500
+        
+    @staticmethod
+    def get_user_by_email(email):
+        user = UserModel().get_user_by_username(email)
+        return user
+
+    @staticmethod
+    def update_user_password(email, new_password):
+        try:
+            hashed_password = pwd_context.hash(new_password)
+            result = UserModel().update_user_password(email, hashed_password)
+            if result:
+                current_app.logger.info(f"Contraseña actualizada para {email}")
+                return True
+            else:
+                current_app.logger.error(f"No se pudo actualizar la contraseña para {email}")
+                return False
+        except Exception as e:
+            current_app.logger.error(f"Error al actualizar la contraseña para {email}: {str(e)}")
+            return False
+-------------------------------------------------------------------------------------------------------------------
+# Backend/src/services/password_reset.py
+
+import random
+import string
+import redis
+import smtplib
+from email.mime.text import MIMEText
+from flask import current_app
+from src.config import config_by_name
+
+class PasswordResetService:
+    def __init__(self):
+        try:
+            self.redis_client = redis.Redis.from_url(config_by_name['development'].REDIS_URL)
+            self.redis_client.ping()  # Verificar conexión
+            current_app.logger.info("Conexión a Redis exitosa.")
+        except Exception as e:
+            current_app.logger.error(f"Error conectando a Redis: {str(e)}")
+            raise e
+
+    def generate_code(self, length=6):
+        code = ''.join(random.choices(string.digits, k=length))
+        current_app.logger.debug(f"Código generado: {code}")
+        return code
+
+    def store_code(self, email, code):
+        try:
+            expiration = config_by_name['development'].PASSWORD_RESET_CODE_EXPIRATION
+            self.redis_client.setex(f"password_reset:{email}", expiration, code)
+            current_app.logger.info(f"Código de restablecimiento almacenado para {email}.")
+        except Exception as e:
+            current_app.logger.error(f"Error almacenando código en Redis para {email}: {str(e)}")
+            raise e
+
+    def send_reset_email(self, email, code):
+        try:
+            # Crear el mensaje MIME
+            msg = MIMEText(f"Tu código de restablecimiento de contraseña es: {code}")
+            msg['Subject'] = 'Restablecimiento de Contraseña'
+            msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
+            msg['To'] = email
+
+            # Conectar al servidor SMTP
+            server = smtplib.SMTP(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'])
+            server.ehlo()
+            if current_app.config['MAIL_USE_TLS']:
+                server.starttls()
+                server.ehlo()
+
+            # Iniciar sesión en el servidor SMTP
+            server.login(current_app.config['MAIL_USERNAME'], current_app.config['MAIL_PASSWORD'])
+
+            # Enviar el correo
+            server.send_message(msg)
+            server.quit()
+
+            current_app.logger.info(f"Correo de restablecimiento enviado a {email}")
+            return True
+        except Exception as e:
+            current_app.logger.error(f"Error al enviar correo a {email}: {str(e)}")
+            return False
+
+    def verify_code(self, email, code):
+        try:
+            stored_code = self.redis_client.get(f"password_reset:{email}")
+            current_app.logger.debug(f"Código almacenado para {email}: {stored_code}")
+            if stored_code and stored_code.decode('utf-8') == code:
+                self.redis_client.delete(f"password_reset:{email}")
+                current_app.logger.info(f"Código de restablecimiento verificado para {email}.")
+                return True
+            current_app.logger.warning(f"Código de restablecimiento inválido o expirado para {email}.")
+            return False
+        except Exception as e:
+            current_app.logger.error(f"Error verificando código en Redis para {email}: {str(e)}")
+            return False
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/services/S3.py
+
+import os
+import boto3
+from flask import current_app
+
+class S3Service:
+    def __init__(self):
+        self.s3 = boto3.client(
+            's3',
+            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+            region_name=os.getenv('AWS_REGION')
+        )
+        self.bucket_name = os.getenv('AWS_S3_BUCKET')
+
+    def upload_file(self, file, filename):
+        try:
+            if file.content_length > 5 * 1024 * 1024:
+                raise ValueError("El archivo excede el tamaño máximo permitido de 5 MB")
+
+            self.s3.upload_fileobj(
+                file,
+                self.bucket_name,
+                filename,
+                ExtraArgs={"ContentType": file.content_type}
+            )
+            file_url = f"https://{self.bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{filename}"
+            return file_url
+        except Exception as e:
+            current_app.logger.error(f"Error al subir el archivo a S3: {str(e)}")
+            raise e
+
+    def generate_presigned_url(self, filename, expiration=7200):
+        try:
+            url = self.s3.generate_presigned_url(
+                ClientMethod='get_object',
+                Params={
+                    'Bucket': self.bucket_name,
+                    'Key': filename
+                },
+                ExpiresIn=expiration
+            )
+            return url
+        except Exception as e:
+            current_app.logger.error(f"Error al generar la URL firmada: {str(e)}")
+            raise e
+        
+    def delete_file(self, filename):
+        try:
+            self.s3.delete_object(Bucket=self.bucket_name, Key=filename)
+        except Exception as e:
+            current_app.logger.error(f"Error al eliminar el archivo {filename} de S3: {str(e)}")
+-------------------------------------------------------------------------------------------------------------------
+#Backend/src/models/user.py
+
+from src.config import mongo
+from flask import current_app
+from bson.objectid import ObjectId
+from src.utils.encryption import encrypt_aes, decrypt_aes
+
+class UserModel:
+    def __init__(self):
+        self.collection = mongo.db['User_2.0']
+
+    def get_user_by_username(self, username):
+        try:
+            encrypted_username = encrypt_aes(username)
+            user = self.collection.find_one({"username": encrypted_username})
+            
+            if user:
+
+                user['nombre'] = decrypt_aes(user['nombre'])
+                user['apellido'] = decrypt_aes(user['apellido'])
+                user['dni'] = decrypt_aes(user['dni'])
+                user['fecha_nacimiento'] = decrypt_aes(user['fecha_nacimiento'])
+                user['profile_image_url'] = decrypt_aes(user['profile_image_url']) if 'profile_image_url' in user else None
+                
+            return user
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener usuario por username {username}: {str(e)}")
+            raise e
+        
+    def get_user_by_id(self, user_id):
+        try:
+            user = self.collection.find_one({"_id": ObjectId(user_id)})
+            if user:
+                user['nombre'] = decrypt_aes(user['nombre'])
+                user['apellido'] = decrypt_aes(user['apellido'])
+                user['dni'] = decrypt_aes(user['dni'])
+                user['fecha_nacimiento'] = decrypt_aes(user['fecha_nacimiento'])
+                user['username'] = decrypt_aes(user['username'])
+                user['profile_image_url'] = decrypt_aes(user['profile_image_url']) if 'profile_image_url' in user else None
+            return user
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener usuario por ID {user_id}: {str(e)}")
+            raise e
+
+    def create_user(self, user_data):
+        try:
+            user_data['username'] = encrypt_aes(user_data['username'])
+            user_data['nombre'] = encrypt_aes(user_data['nombre'])
+            user_data['apellido'] = encrypt_aes(user_data['apellido'])
+            user_data['dni'] = encrypt_aes(user_data['dni'])
+            user_data['fecha_nacimiento'] = encrypt_aes(user_data['fecha_nacimiento'])
+            if 'profile_image_url' in user_data and user_data['profile_image_url'] is not None:
+                user_data['profile_image_url'] = encrypt_aes(user_data['profile_image_url'])
+
+            self.collection.insert_one(user_data)
+            return True
+        except Exception as e:
+            current_app.logger.error(f"Error al crear usuario: {str(e)}")
+            raise e
+        
+    def update_user_image(self, user_id, updated_data):
+        try:
+            if 'profile_image_url' in updated_data and updated_data['profile_image_url'] is not None:
+                updated_data['profile_image_url'] = encrypt_aes(updated_data['profile_image_url'])
+
+            self.collection.update_one({"_id": ObjectId(user_id)}, {"$set": updated_data})
+            return True
+        except Exception as e:
+            current_app.logger.error(f"Error al actualizar usuario {user_id}: {str(e)}")
+            raise e
+
+    def update_user_profile_image(self, user_id, profile_image_url):
+        try:
+            if not isinstance(user_id, ObjectId):
+                user_id = ObjectId(user_id)
+
+            encrypted_profile_image_url = encrypt_aes(profile_image_url)
+
+            self.collection.update_one(
+                {'_id': user_id},
+                {'$set': {'profile_image_url': encrypted_profile_image_url}}
+            )
+        except Exception as e:
+            current_app.logger.error(f"Error al actualizar la imagen de perfil para el usuario {user_id}: {str(e)}")
+            raise e
+    
+    def update_user_password(self, email, hashed_password):
+        try:
+            encrypted_email = encrypt_aes(email)
+            result = self.collection.update_one(
+                {"username": encrypted_email},
+                {"$set": {"hashed_password": hashed_password}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            current_app.logger.error(f"Error al actualizar la contraseña para {email}: {str(e)}")
+            raise e        
+-------------------------------------------------------------------------------------------------------------------
+
+
+
+Lista de tareas pendientes:
+
+F-Guardar datos de sesión
+F-Hacer pantalla contracts.tsx
+F(signup)-Añadir términos de uso
+F(signup)-Añadir verificación DNI
+F-Refactorizar con strings y colors
+F-Eliminar campo email de pantalla de perfil
+F-Mostrar imagen por defecto (cuando haya error al cargar la imagen)
+
+B-Comprimir imágenes
+B-Cambiar logs a MongoDB
+B-Cambiar sesiones a MongoDB
+B-Modular y estructurar recovery
+B-Configurar logout (eliminar token)
+B-Hacer pantalla recovery.tsx UTF-8 friendly
+
+
+++Ultimo cambio añadir imagesServices.tsx y modal.tsx

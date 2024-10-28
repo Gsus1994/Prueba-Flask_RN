@@ -1,0 +1,24 @@
+{% extends "./template.html" %}
+
+{% block Title %}
+    Login
+{% endblock %}
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/login.css') }}">
+{% endblock %}
+
+{% block Body %}
+<div id="login-form">
+    <img src="{{ url_for('static', filename='images/240509_Too_Logo_Gris_Oscuro.png') }}" alt="Logo Too">
+    <h1>Iniciar sesión</h1>
+    <input id="username" type="text" placeholder="Usuario">
+    <input id="password" type="password" placeholder="Contraseña">
+    <button id="login-btn">Iniciar sesión</button>
+</div>
+<script>
+    const loginUrl = "{{url_for('login.login')}}";
+    const mapUrl = "{{url_for('rooms.show_map')}}";
+</script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,1499 @@
+#src/run.py
+
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src import create_app
+
+app = create_app('development')  # Cambiar a 'production' en producción
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/requirements.txt
+
+bcrypt==3.2.0
+blinker==1.8.2
+cachelib==0.13.0
+certifi==2024.7.4
+cffi==1.17.0
+charset-normalizer==3.3.2
+click==8.1.7
+colorama==0.4.6
+dnspython==2.6.1
+Flask==3.0.3
+Flask-Bcrypt==1.0.1
+Flask-JWT-Extended==4.6.0
+Flask-PyMongo==2.3.0
+Flask-Session==0.8.0
+idna==3.8
+itsdangerous==2.2.0
+Jinja2==3.1.4
+MarkupSafe==2.1.5
+msgspec==0.18.6
+Naked==0.1.32
+passlib==1.7.4
+pycparser==2.22
+pycryptodome==3.20.0
+PyJWT==2.9.0
+pymongo==4.8.0
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
+PyYAML==6.0.2
+redis==5.0.8
+requests==2.32.3
+shellescape==3.8.1
+six==1.16.0
+urllib3==2.2.2
+Werkzeug==3.0.4
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/config.py
+
+import os
+import logging
+from dotenv import load_dotenv
+from flask_bcrypt import Bcrypt
+from flask_pymongo import PyMongo
+from datetime import datetime, timedelta
+from flask_jwt_extended import JWTManager
+from cachelib.file import FileSystemCache
+from logging.handlers import TimedRotatingFileHandler
+
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+load_dotenv(os.path.join(base_dir, '.env'))
+
+class Config:
+    MONGO_URI = os.getenv('MONGO_URI')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'mysecretkey')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwtsecretkey')
+    TOKEN_EXPIRATION = int(os.getenv('TOKEN_EXPIRATION', 5))
+    AES_KEY = bytes.fromhex(os.getenv('AES_KEY'))
+
+    # Configuración de la sesión en el sistema de archivos usando CacheLib
+    SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = os.getenv('SESSION_FILE_DIR')
+    if not os.path.isabs(SESSION_FILE_DIR):
+        SESSION_FILE_DIR = os.path.join(base_dir, SESSION_FILE_DIR)
+    
+    # Verificar si el directorio de sesión existe, si no, crearlo
+    if not os.path.exists(SESSION_FILE_DIR):
+        os.makedirs(SESSION_FILE_DIR)
+
+    SESSION_CACHE = FileSystemCache(SESSION_FILE_DIR, threshold=int(os.getenv('SESSION_FILE_THRESHOLD', 100)))
+    SESSION_FILE_MODE = int(os.getenv('SESSION_FILE_MODE', 0o600), 8)
+
+    # Configuración de la vida útil de los archivos de sesión (en horas)
+    SESSION_LIFETIME_HOURS = int(os.getenv('SESSION_LIFETIME_HOURS', 24))
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=SESSION_LIFETIME_HOURS)
+
+    # Configuración de logs
+    LOG_DIR = os.getenv('LOG_DIR')
+    if not os.path.isabs(LOG_DIR):
+        LOG_DIR = os.path.join(base_dir, LOG_DIR)
+    
+    # Verificar si el directorio de logs existe, si no, crearlo
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+
+    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+    LOG_MAX_BYTES = int(os.getenv('LOG_MAX_BYTES', 20 * 1024 * 1024))  # Tamaño máximo de un archivo de log (20MB)
+    LOG_BACKUP_COUNT = int(os.getenv('LOG_BACKUP_COUNT', 10))  # Número máximo de archivos de respaldo
+    LOG_LEVEL = getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper())
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    LOG_LEVEL = logging.DEBUG  # Nivel de log para desarrollo
+
+class ProductionConfig(Config):
+    DEBUG = False
+    LOG_LEVEL = logging.WARNING  # Nivel de log para producción
+
+config_by_name = dict(
+    development=DevelopmentConfig,
+    production=ProductionConfig
+)
+
+jwt = JWTManager()
+mongo = PyMongo()
+bcrypt = Bcrypt()
+
+def cleanup_sessions(app):
+    now = datetime.now()
+    session_lifetime = timedelta(hours=int(os.getenv('SESSION_LIFETIME_HOURS', 24)))
+    session_dir = os.getenv('SESSION_FILE_DIR')
+
+    for session_file in os.listdir(session_dir):
+        session_path = os.path.join(session_dir, session_file)
+        if os.path.isfile(session_path):
+            file_mtime = datetime.fromtimestamp(os.path.getmtime(session_path))
+            if now - file_mtime > session_lifetime:
+                try:
+                    os.remove(session_path)
+                    app.logger.info(f"Archivo de sesión eliminado: {session_file}")
+                except Exception as e:
+                    app.logger.error(f"Error eliminando el archivo {session_file}: {str(e)}")
+
+
+def init_app(app):
+    jwt.init_app(app)
+    mongo.init_app(app)
+    bcrypt.init_app(app)
+
+    # Configuración del manejador de logs con rotación diaria
+    file_handler = TimedRotatingFileHandler(
+        app.config['LOG_FILE'], 
+        when='midnight',  # Rotación diaria a medianoche
+        interval=1,  # Intervalo de rotación
+        backupCount=app.config['LOG_BACKUP_COUNT']  # Número máximo de archivos de respaldo
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s'
+    ))
+    file_handler.setLevel(app.config['LOG_LEVEL'])
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(app.config['LOG_LEVEL'])
+
+    app.logger.info('App startup')
+
+    # Llamar a la función de limpieza de sesiones
+    cleanup_sessions(app)
+-------------------------------------------------------------------------------------------------------------------------------------
+
+#src/__init__.py
+
+from src.routes import register_blueprints
+from src.config import config_by_name, init_app
+from flask import Flask, request, session, redirect, url_for
+
+def create_app(config_name):
+    app = Flask(__name__)
+    app.config.from_object(config_by_name[config_name])
+    
+    init_app(app)
+    register_blueprints(app)
+
+    @app.after_request
+    def log_request_info(response):
+        user = session.get('username', 'Anonymous')
+        ip = request.remote_addr
+        app.logger.info(f'Usuario: {user} - {request.method} {request.path} - IP: {ip}')
+        return response
+    
+    @app.route('/')
+    def index():
+        return redirect(url_for('login.login'))
+    
+    return app
+-------------------------------------------------------------------------------------------------------------------------------------
+
+#src/utils/encryption.py
+
+import base64
+from src.config import Config
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+# Función para corregir la codificación del texto
+def correct_encoding(text):
+    try:
+        # Intentar decodificar como ISO-8859-1 y recodificar como UTF-8
+        text = text.encode('iso-8859-1').decode('utf-8')
+    except UnicodeDecodeError:
+        # Si falla, el texto ya está en UTF-8, así que no hacemos nada
+        pass
+    return text
+
+def decrypt_aes(data):
+    try:
+        cipher = AES.new(Config.AES_KEY, AES.MODE_ECB)
+        decrypted = cipher.decrypt(base64.b64decode(data))
+        # Unpad y decodificación a UTF-8
+        decrypted_text = unpad(decrypted, AES.block_size).decode('utf-8')
+        return correct_encoding(decrypted_text)
+    except (UnicodeDecodeError, ValueError) as e:
+        # Manejo de errores si la decodificación falla
+        return f"Error al desencriptar: {str(e)}"
+
+def encrypt_aes(data):
+    try:
+        cipher = AES.new(Config.AES_KEY, AES.MODE_ECB)
+        # Pad y codificación a UTF-8
+        encrypted = cipher.encrypt(pad(data.encode('utf-8'), AES.block_size))
+        return base64.b64encode(encrypted).decode('utf-8')
+    except Exception as e:
+        # Manejo de errores si la encriptación falla
+        return f"Error al encriptar: {str(e)}"
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/utils/security.py
+
+import jwt
+from bson import ObjectId
+from functools import wraps
+from flask import make_response
+from src.config import config_by_name
+from datetime import datetime, timezone, timedelta
+from flask import session, redirect, url_for, request, jsonify
+
+def create_access_token(data):
+
+    to_encode = data.copy()
+    for key, value in to_encode.items():
+        if isinstance(value, ObjectId):
+            to_encode[key] = str(value)
+    to_encode.update({
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=config_by_name['development'].TOKEN_EXPIRATION)
+    })
+
+    return jwt.encode(to_encode, config_by_name['development'].SECRET_KEY, algorithm="HS256")
+
+
+def verify_token(token):
+    try:
+        # Decodifica el token usando la clave secreta
+        payload = jwt.decode(token, config_by_name['development'].SECRET_KEY, algorithms=["HS256"])
+        return payload  # Devuelve el payload si el token es válido
+    except jwt.ExpiredSignatureError:
+        return None  # El token ha expirado
+    except jwt.InvalidTokenError:
+        return None  # Token inválido
+
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = None
+        
+        # Intenta obtener el token de la cabecera 'Authorization'
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(" ")[1]  # Elimina el 'Bearer '
+
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 401  # Si no hay token, devuelve un error
+
+        try:
+            # Verifica el token
+            data = verify_token(token)
+            if data is None:
+                return jsonify({'message': 'Token is invalid or expired!'}), 401
+            session['user'] = data  # Opcional: puedes almacenar los datos del usuario en la sesión
+        except Exception as e:
+            return jsonify({'message': 'Something went wrong', 'error': str(e)}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return no_cache
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/templates/template.html
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block Title %}
+        {% endblock %}
+    </title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous">
+    <!-- CustomCSS -->
+    <style>
+
+    </style>
+    {% block CustomCSS %}
+    {% endblock %}
+</head>
+<body>
+    {% block Body %}
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/templates/auth/login.html
+
+{% extends "./template.html" %}
+
+{% block Title %}
+    Login
+{% endblock %}
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/login.css') }}">
+{% endblock %}
+
+{% block Body %}
+<div id="login-form">
+    <img src="{{ url_for('static', filename='images/240509_Too_Logo_Gris_Oscuro.png') }}" alt="Logo Too">
+    <h1>Iniciar sesión</h1>
+    <input id="username" type="text" placeholder="Usuario">
+    <input id="password" type="password" placeholder="Contraseña">
+    <button id="login-btn">Iniciar sesión</button>
+</div>
+<script>
+    const loginUrl = "{{url_for('login.login')}}";
+    const mapUrl = "{{url_for('rooms.show_map')}}";
+</script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/templates/views/map.html
+
+{% extends "template.html" %}
+
+{% block Title %}
+    Mapa de España
+{% endblock %}
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/map.css') }}">
+{% endblock %}
+
+{% block Body %}
+    <div id="map"></div>
+    <div id="sidebar">
+        <img src="{{ url_for('static', filename='images/240509_Too_Logo_Gris_Oscuro.png') }}" alt="Logo Too">
+            <h1>Información sobre el itinerario</h1>
+            
+            <label id="sidebar-label" for="dni-input">Introduzca un DNI:</label>
+            <input id="dni-input" type="text" placeholder="DNI">
+            
+            <button id="search-agreements">Buscar Acuerdos</button>
+            
+            <select id="agreements-dropdown" disabled>
+                <option value="">Seleccione un acuerdo</option>
+            </select>
+            
+            <button id="show-itinerary" disabled>Mostrar itinerario</button>
+            <button id="logout-button">Cerrar sesión</button>
+    </div>
+    <button id="show-sidebar-btn" class="btn">Restaurar</button>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/static/CSS/login.css
+
+html,
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, gray, rgb(194, 194, 194));
+    background-attachment: fixed;
+}
+
+#login-form {
+    background-color: #595b5e;
+    padding: 20px;
+    border: 2px solid #000000;
+    border-radius: 10px;
+    text-align: center;
+    width: 350px;
+}
+
+#login-form h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+#login-form img {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+#login-form input {
+    width: 80%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 13px;
+}
+
+#login-form button {
+    width: 80%;
+    padding: 10px;
+    font-size: 18px;
+    background-color: #525e96;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+#login-form button:hover {
+    background-color: #b49ea0;
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/static/CSS/map.css
+
+html,
+body {
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100vh; /* Asegura que el mapa ocupe toda la altura */
+    width: 100vw;  /* Asegura que el mapa ocupe todo el ancho */
+    z-index: 1;
+    transition: width 0.3s ease-in-out;
+}
+
+#map.fullscreen {
+    width: 100vw; /* Ocupa todo el ancho cuando el sidebar está oculto */
+}
+
+#sidebar {
+    position: absolute; /* Sidebar posicionado absoluto */
+    right: 0;
+    top: 0;
+    width: 20vw;
+    height: 100vh; /* Sidebar tiene la altura completa */
+    background: linear-gradient(to bottom, rgb(117, 117, 117), rgb(247, 240, 240));
+    z-index: 100; /* Está por encima del mapa */
+    padding: 10px; /* Añadir padding general dentro del sidebar */
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+#sidebar.hidden {
+    transform: translateX(100%); /* Desplaza el sidebar fuera de la pantalla */
+}
+
+#show-sidebar-btn {
+    position: absolute;
+    right: 20px; /* Separado 20px del borde derecho */
+    top: 50%; /* Colocar el botón a la mitad verticalmente */
+    transform: translateY(-50%); /* Ajustar para que quede realmente centrado */
+    padding: 0.8vw;
+    font-size: 1.2vw;
+    margin-top: 1vw;
+    border: 1px solid #000000;
+    border-radius: 7px;
+    background-color: #525e96;
+    color: white;
+    cursor: pointer;
+    display: none;
+    z-index: 101;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sombra para un efecto flotante */
+    
+}
+
+#show-sidebar-btn.visible {
+    display: block;
+}
+
+#map.fullscreen {
+    width: 100vw; /* Ocupa todo el ancho cuando el sidebar está oculto */
+}
+
+#sidebar img {
+    width: 10vw;
+    margin-bottom: 1vw;
+}
+
+#sidebar h1 {
+    font-size: 2vw;
+    margin: 0 0 1vw;
+    color: #d8d8d8;
+}
+#sidebar p,
+#sidebar-label {
+    padding: 0.8vw;
+    font-size: 1.5vw;
+    margin-top: 0.5vw;
+    color: #141414;
+    border-radius: 7px;
+    width: 100%;
+}
+
+#dni-input {
+    margin-top: 0.5vw;
+    font-size: 1vw;
+    padding: 0.8vw;
+    width: 100%;
+    border: 1px solid #000000;
+    border-radius: 7px;
+}
+
+#search-agreements {
+    padding: 0.8vw;
+    font-size: 1.2vw;
+    background-color: #525e96;
+    color: white;
+    border: 1px solid #000000;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 1vw;
+    width: 100%;
+}
+
+#search-agreements:hover {
+    background-color: #b49ea0;
+}
+
+#agreements-dropdown {
+    margin-top: 0.5vw;
+    font-size: 1vw;
+    padding: 0.8vw;
+    width: 100%;
+    border: 1px solid #000000;
+    border-radius: 7px;
+}
+
+#show-itinerary {
+    padding: 0.8vw;
+    font-size: 1.2vw;
+    background-color: #525e96;
+    color: white;
+    border: 1px solid #000000;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 1vw;
+    width: 100%;
+}
+
+#show-itinerary:hover {
+    background-color: #b49ea0;
+}
+
+#logout-button {
+    padding: 0.8vw;
+    font-size: 1.2vw;
+    background-color: #525e96;
+    color: white;
+    border: 1px solid #000000;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-top: 1vw;
+    width: 100%;
+}
+
+#logout-button:hover {
+    background-color: #b49ea0;
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/static/js/login.js
+
+document.getElementById('login-btn').addEventListener('click', function() {
+    login();
+});
+
+document.getElementById('password').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        login();
+    }
+});
+
+function login() {
+    var username = document.getElementById('username').value;
+    var password = document.getElementById('password').value;
+    
+    fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: username, password: password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+
+        if (data.access_token) {
+            localStorage.setItem('token', data.access_token);
+            window.location.href = mapUrl;                
+        } else {
+            alert('Login fallido');
+        }
+    })
+    .catch(error => {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        console.error('Error en la solicitud:', error);
+    });
+}
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/static/js/map.js
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Inicialización del mapa
+    var map = L.map('map').setView([40.416775, -3.70379], 6);  // Centrado en España, con un nivel de zoom que muestra todo el país
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Variables para almacenar elementos dibujados en el mapa
+    let markers = [];
+    let polylines = [];
+    let legend;
+
+    // Función para limpiar el mapa
+    function clearMap() {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+        
+        polylines.forEach(polyline => map.removeLayer(polyline));
+        polylines = [];
+        
+        if (legend) {
+            map.removeControl(legend);
+            legend = null;
+        }
+    }
+
+    // Función para dibujar coordenadas en el mapa
+    function drawCoordinates(coords, color, firstCoordColor) {
+        var formattedCoords = coords.map(coord => {
+            return Array.isArray(coord) ? coord : [coord.latitude, coord.longitude];
+        });
+
+        var validCoords = formattedCoords.filter(coord => {
+            const isValid = coord && typeof coord[0] === 'number' && typeof coord[1] === 'number';
+            return isValid;
+        });
+
+        if (validCoords.length === 0) {
+            return;
+        }
+
+        validCoords.forEach((coord, index) => {
+            var markerColor = index === 0 ? firstCoordColor : color;
+            let marker = L.marker(coord, {
+                icon: L.icon({
+                    iconUrl: `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`
+                })
+            }).addTo(map);
+            markers.push(marker);
+        });
+
+        if (validCoords.length > 1) {
+            let polyline = L.polyline(validCoords, {color: color}).addTo(map);
+            polylines.push(polyline);
+        }
+    }
+
+    // Función para buscar acuerdos
+    function searchAgreements() {
+        var dni = document.getElementById('dni-input').value;
+
+        // Validar y formatear el DNI para que acepte solo 8 números y una letra en mayúscula
+        dni = dni.replace(/[^0-9A-Za-z]/g, ''); // Eliminar cualquier carácter que no sea un número o letra
+        
+        if (dni.length <= 8) {
+            dni = dni.replace(/[^0-9]/g, ''); // Solo permitir números en los primeros 8 caracteres
+        } else if (dni.length === 9) {
+            dni = dni.slice(0, 8) + dni[8].toUpperCase().replace(/[^A-Za-z]/g, ''); // Permitir solo una letra en la novena posición y convertirla en mayúscula
+        } else {
+            dni = dni.slice(0, 9); // Limitar el valor a 9 caracteres
+        }
+
+        // Establecer el valor formateado en el campo input
+        document.getElementById('dni-input').value = dni;
+
+        // Validar el formato del DNI, que debe ser 8 números y 1 letra
+        var dniPattern = /^\d{8}[A-Z]$/;
+        if (!dni) {
+            alert('Por favor, introduzca un DNI');
+            return;
+        } else if (!dniPattern.test(dni)) {
+            alert('Por favor, introduzca un DNI correcto');
+            return;
+        }
+
+        fetch('/rooms/obtener_acuerdos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify({ dni: dni })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                var agreementsDropdown = document.getElementById('agreements-dropdown');
+                agreementsDropdown.innerHTML = '';
+        
+                data.forEach(agreement => {
+                    var option = document.createElement('option');
+                    option.value = agreement._id;  
+                    option.textContent = `${agreement.nombreUser1} ${agreement.apellidosUser1} y ${agreement.nombreUser2} ${agreement.apellidosUser2} --> ${agreement.fechaCreacionSala}`; 
+                    agreementsDropdown.appendChild(option);
+                });                
+        
+                agreementsDropdown.disabled = false;
+                document.getElementById('show-itinerary').disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching agreements:', error);
+            alert('Hubo un error al buscar los acuerdos.');
+        });        
+    }
+
+    document.getElementById('search-agreements').addEventListener('click', function() {
+        searchAgreements();
+    });
+
+    document.getElementById('dni-input').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            searchAgreements();
+        }
+    });
+
+    // Función para mostrar el itinerario
+    document.getElementById('show-itinerary').addEventListener('click', function() {
+        clearMap();  // Limpiar el mapa antes de dibujar un nuevo itinerario
+
+        var selectedAgreementId = document.getElementById('agreements-dropdown').value;
+        var dni = document.getElementById('dni-input').value;
+
+        if (!selectedAgreementId) {
+            alert('Por favor, seleccione un acuerdo');
+            return;
+        }
+
+        // Ocultar el sidebar cuando se muestra el itinerario
+        hideSidebar();
+
+        fetch('/rooms/itinerario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify({ agreement_id: selectedAgreementId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                var user1Coordinates, user2Coordinates, userColor, accompliceColor, userFirstCoordColor, accompliceFirstCoordColor, name, accompliceName;
+                
+                if (dni === data.dniUser1) {
+                    user1Coordinates = data.CoordenadasUser1;
+                    user2Coordinates = data.CoordenadasUser2;
+                    userColor = 'blue';  // Azul
+                    accompliceColor = 'green';  // Verde
+                    userFirstCoordColor = 'red';  // Rojo
+                    accompliceFirstCoordColor = 'orange';  // Naranja
+                    name = `${data.nombreUser1} ${data.apellidosUser1}`;
+                    accompliceName = `${data.nombreUser2} ${data.apellidosUser2}`;
+                } else {
+                    user1Coordinates = data.CoordenadasUser2;
+                    user2Coordinates = data.CoordenadasUser1;
+                    userColor = 'green';  // Verde
+                    accompliceColor = 'blue';  // Azul
+                    userFirstCoordColor = 'orange';  // Naranja
+                    accompliceFirstCoordColor = 'red';  // Rojo
+                    name = `${data.nombreUser2} ${data.apellidosUser2}`;
+                    accompliceName = `${data.nombreUser1} ${data.apellidosUser1}`;
+                }
+
+                drawCoordinates(user1Coordinates, userColor, userFirstCoordColor);
+                drawCoordinates(user2Coordinates, accompliceColor, accompliceFirstCoordColor);
+
+                var backend_info = `Nombre: ${name}\n DNI: ${dni}\n Color itinerario: ${colorToSpanish(userColor)}\n Color Primera Coordenada: ${colorToSpanish(userFirstCoordColor)}\n\n Acompañante:\n Nombre: ${accompliceName}\n Color itinerario: ${colorToSpanish(accompliceColor)}\n Color Primera Coordenada: ${colorToSpanish(accompliceFirstCoordColor)}`;
+
+                var legend_html = `
+                <div style="position: fixed; bottom: 60px; left: 60px; width: 310px; height: 220px; background-color: white; z-index:9999; font-size:14px; border:2px solid grey; border-radius:10px;">
+                &nbsp; <b>Información del Usuario</b><br>
+                &nbsp; ${backend_info.replace(/\n/g, "<br>&nbsp;")} 
+                </div>
+                `;
+
+                legend = L.control({position: 'bottomleft'});
+                legend.onAdd = function () {
+                    var div = L.DomUtil.create('div');
+                    div.innerHTML = legend_html;
+                    return div;
+                };
+                legend.addTo(map);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching agreement details:', error);
+            alert('Hubo un error al obtener los detalles del acuerdo.');
+        });
+    });
+
+    // Función para cerrar sesión
+    document.getElementById('logout-button').addEventListener('click', function() {
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/login';
+            } else {
+                alert('Error al cerrar sesión.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Hubo un problema al cerrar sesión. Por favor, inténtalo de nuevo.');
+        });
+    });
+
+    // Función para convertir colores al español
+    function colorToSpanish(color) {
+        switch(color) {
+            case 'blue':return 'azul';
+            case 'green':return 'verde';
+            case 'red':return 'rojo';
+            case 'orange':return 'naranja';
+            default:return color;
+        }
+    }
+
+    // Función para ocultar el sidebar y expandir el mapa
+    function hideSidebar() {
+        document.getElementById('sidebar').classList.add('hidden');
+        document.getElementById('map').classList.add('fullscreen');
+        document.getElementById('show-sidebar-btn').classList.add('visible');
+
+        map.invalidateSize();  // Ajustar tamaño del mapa después de ocultar el sidebar
+    }
+
+    // Función para restaurar el sidebar
+    function showSidebar() {
+        document.getElementById('sidebar').classList.remove('hidden');
+        document.getElementById('map').classList.remove('fullscreen');
+        document.getElementById('show-sidebar-btn').classList.remove('visible');
+
+        map.invalidateSize();  // Ajustar tamaño del mapa después de mostrar el sidebar
+    }
+
+    // Añadir el evento al botón de mostrar el sidebar
+    document.getElementById('show-sidebar-btn').addEventListener('click', showSidebar);
+});
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/static/images/240509_Too_Logo_Gris_Oscuro.png
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/services/user.py
+
+from src.utils import security
+from src.models.user import UserModel
+from passlib.context import CryptContext
+from flask import session, request, current_app, jsonify
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class UserService:
+    @staticmethod
+    def authenticate_user(request):
+        try:
+            data = request.json
+            username = data.get('username')
+            password = data.get('password') 
+
+            user = UserModel().get_user_by_username(username)
+
+            if not user or not user.get('hashed_password'):
+                return jsonify({"msg": "Invalid credentials"}), 401
+
+            if not UserService.verify_password(password, user['hashed_password']):
+                return jsonify({"msg": "Invalid credentials"}), 401
+
+            token = security.create_access_token(user)
+            session['username'] = user['username']
+
+            return jsonify({"access_token": token, "token_type": "bearer"})
+        except Exception as e:
+            current_app.logger.error(f"Error al autenticar usuario {username}: {str(e)}")
+            return jsonify({"msg": "Error en el proceso de autenticación"}), 500
+
+    @staticmethod
+    def verify_password(plain_password, hashed_password):
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception as e:
+            current_app.logger.error(f"Error al verificar la contraseña: {str(e)}")
+            return False
+    
+    @staticmethod
+    def logout_user():
+        try:
+            username = session.get('username', 'Anonymous')
+            session.clear()
+            current_app.logger.info(f'Usuario: {username} - Cerrando sesion - IP: {request.remote_addr}')
+            return jsonify({"msg": "Sesión cerrada correctamente"}), 200
+        except Exception as e:
+            current_app.logger.error(f"Error al cerrar sesion para el usuario {username}: {str(e)}")
+            return jsonify({"msg": "Error al cerrar la sesion"}), 500
+------------------------------------------------------------------------------------------------------------------------------------
+#src/services/room.py
+
+import re
+from src.models.room import RoomModel
+from flask import request, jsonify, current_app
+
+class RoomService:
+    
+    @staticmethod
+    def acuerdos():
+        dni = request.json.get('dni')    
+        
+        if not dni:        
+            return jsonify({"error": "DNI no proporcionado"}), 400
+        
+        if not re.match(r"^\d{8}[A-Z]$", dni):        
+            return jsonify({"error": "DNI incorrecto. Debe contener 8 números seguidos de una letra mayúscula."}), 400
+        
+        try:
+            agreements = RoomModel().get_rooms_by_dni(dni)        
+        except Exception as e:
+            current_app.logger.error(f"Error al buscar acuerdos para DNI {dni}: {str(e)}")
+            return jsonify({"error": "Error al buscar acuerdos."}), 500
+        
+        if not agreements:        
+            return jsonify({"error": "No se encontraron acuerdos para el DNI proporcionado"}), 404
+
+        for agreement in agreements:
+            agreement['_id'] = str(agreement['_id'])
+        
+        return jsonify(agreements), 200
+    
+    @staticmethod
+    def obterner_itinerario():
+        agreement_id = request.json.get('agreement_id')
+
+        if not agreement_id:
+            return jsonify({"error": "ID del acuerdo no proporcionado"}), 400
+
+        try:
+            room_model = RoomModel()
+            agreement_details = room_model.get_room_by_id(agreement_id)
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener detalles del acuerdo con ID {agreement_id}: {str(e)}")
+            return jsonify({"error": "Error al obtener detalles del acuerdo."}), 500
+
+        if not agreement_details:
+            return jsonify({"error": "No se encontraron detalles para el ID proporcionado"}), 404
+
+        return jsonify(agreement_details), 200
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/routes/login.py
+
+from src.services.user import UserService
+from flask import Blueprint, render_template, jsonify, request, current_app
+
+login_bp = Blueprint('login', __name__)
+
+@login_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    try:
+        if request.method == 'POST':
+            response = UserService.authenticate_user(request)
+            return response
+        return render_template('auth/login.html')
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /login: {str(e)}")
+        return jsonify({"msg": "Error en el proceso de login"}), 500
+
+@login_bp.route('/logout', methods=['POST'])
+def logout():
+    try:
+        response = UserService.logout_user()
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /logout: {str(e)}")
+        return jsonify({"msg": "Error al cerrar la sesión"}), 500
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/routes/room.py
+
+from src.services.room import RoomService
+from src.utils.security import token_required, login_required, nocache
+from flask import Blueprint, render_template, jsonify, current_app
+
+rooms_bp = Blueprint('rooms', __name__)
+
+@rooms_bp.route('/show_map')
+@login_required
+@nocache
+def show_map():
+    try:
+        return render_template('views/map.html')
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /show_map: {str(e)}")
+        return jsonify({"msg": "Error al cargar el mapa"}), 500
+
+@rooms_bp.route('/rooms/obtener_acuerdos', methods=['POST'])
+@token_required
+def obtener_acuerdos():
+    try:
+        return RoomService.acuerdos()
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /rooms/obtener_acuerdos: {str(e)}")
+        return jsonify({"msg": "Error al obtener acuerdos"}), 500
+
+@rooms_bp.route('/rooms/itinerario', methods=['POST'])
+@token_required
+def itinerario():
+    try:
+        return RoomService.obterner_itinerario()
+    except Exception as e:
+        current_app.logger.error(f"Error en la ruta /rooms/itinerario: {str(e)}")
+        return jsonify({"msg": "Error al obtener el itinerario"}), 500
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/models/user.py
+
+from src.config import mongo
+from flask import current_app
+
+class UserModel:
+    def __init__(self):
+        self.collection = mongo.db['Polis']
+
+    def get_user_by_username(self, username):
+        try:
+            return self.collection.find_one({"username": username})
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener usuario por username {username}: {str(e)}")
+            raise e
+-------------------------------------------------------------------------------------------------------------------------------------
+#src/models/room.py
+
+from bson import ObjectId
+from src.config import mongo
+from flask import current_app
+from src.utils.encryption import encrypt_aes, decrypt_aes
+
+class RoomModel:
+    def __init__(self):
+        self.collection = mongo.db['Room']
+
+    def get_rooms_by_dni(self, dni):
+        try:
+            encrypted_dni = encrypt_aes(dni)
+            current_app.logger.info(f"Busqueda realizada para DNI: {dni}")
+
+            rooms = list(self.collection.find({"$or": [{"dniUser1": encrypted_dni}, {"dniUser2": encrypted_dni}]}))
+            
+            for room in rooms:
+                room['dniUser1'] = decrypt_aes(room.get('dniUser1')) if room.get('dniUser1') else None
+                room['dniUser2'] = decrypt_aes(room.get('dniUser2')) if room.get('dniUser2') else None
+                room['nombreUser1'] = decrypt_aes(room.get('nombreUser1')) if room.get('nombreUser1') else None
+                room['nombreUser2'] = decrypt_aes(room.get('nombreUser2')) if room.get('nombreUser2') else None
+                room['apellidosUser1'] = decrypt_aes(room.get('apellidosUser1')) if room.get('apellidosUser1') else None
+                room['apellidosUser2'] = decrypt_aes(room.get('apellidosUser2')) if room.get('apellidosUser2') else None
+                room['fechaCreacionSala'] = decrypt_aes(room.get('fechaCreacionSala')) if room.get('fechaCreacionSala') else None
+
+            
+                rooms.sort(key=lambda room: room['fechaCreacionSala'] or '')
+
+            return rooms
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener rooms por DNI {dni}: {str(e)}")
+            raise e
+
+    def get_room_by_id(self, room_id):            
+        try:
+            room = self.collection.find_one({"_id": ObjectId(room_id)})
+            
+            if room:
+                decrypted_room = {
+                    "nombreUser1": decrypt_aes(room.get('nombreUser1')) if room.get('nombreUser1') else None,
+                    "apellidosUser1": decrypt_aes(room.get('apellidosUser1')) if room.get('apellidosUser1') else None,
+                    "dniUser1": decrypt_aes(room.get('dniUser1')) if room.get('dniUser1') else None,
+                    "CoordenadasUser1": [(coord['latitude'], coord['longitude']) for coord in room.get('user1Coordinates', [])],
+                    "nombreUser2": decrypt_aes(room.get('nombreUser2')) if room.get('nombreUser2') else None,
+                    "apellidosUser2": decrypt_aes(room.get('apellidosUser2')) if room.get('apellidosUser2') else None,
+                    "dniUser2": decrypt_aes(room.get('dniUser2')) if room.get('dniUser2') else None,
+                    "CoordenadasUser2": [(coord['latitude'], coord['longitude']) for coord in room.get('user2Coordinates', [])]
+                }
+
+                return decrypted_room
+            else:
+                return None
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener room por ID {room_id}: {str(e)}")
+            raise e
+-------------------------------------------------------------------------------------------------------------------------------------
+#.env
+
+SECRET_KEY=B!1w8*NAt1T^%kvhUI*S^+
+#MONGO_URI = mongodb+srv://jesusmoralescarr:nlq0xgLZMK71mg4H@consent.7xqmdhq.mongodb.net/Consent?retryWrites=true&w=majority&appName=Consent # (Atlas de j.Morales)
+MONGO_URI=mongodb+srv://reactiontoo:4Eb6IQ44tAdh0rTL@reaction.l17lr.mongodb.net/Too?retryWrites=true&w=majority&appName=ReAction
+#AES_KEY = d632d224c8063ef9a6884b47bcf40a3d73cf351c2da32124a983704c774d4d91
+AES_KEY=df6f231e1e10446bba09adb81875dd12c546afa911744e34b6722bd4d583cf24
+JWT_SECRET_KEY=11892df588b5bbe224f039a88caa004c79a83fc9775e4a44800baa138567330f
+TOKEN_EXPIRATION=30
+SESSION_FILE_DIR=flask_session
+SESSION_FILE_THRESHOLD=100
+SESSION_FILE_MODE=0o600
+SESSION_LIFETIME_HOURS=1
+LOG_DIR=logs
+LOG_MAX_BYTES=20971520
+LOG_BACKUP_COUNT=50
+LOG_LEVEL=INFO
+SESSION_TYPE=filesystem
+SESSION_PERMANENT=False
+-------------------------------------------------------------------------------------------------------------------------------------
+#.gitignore
+
+# Created by https://www.toptal.com/developers/gitignore/api/python,flask,venv,windows
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,flask,venv,windows
+
+### Flask ###
+instance/*
+!instance/.gitignore
+.webassets-cache
+.env
+
+### Flask.Python Stack ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+
+# C extensions
+
+# Distribution / packaging
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+
+# Installer logs
+
+# Unit test / coverage reports
+
+# Translations
+
+# Django stuff:
+
+# Flask stuff:
+
+# Scrapy stuff:
+
+# Sphinx documentation
+
+# PyBuilder
+
+# Jupyter Notebook
+
+# IPython
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+
+# Celery stuff
+
+# SageMath parsed files
+
+# Environments
+
+# Spyder project settings
+
+# Rope project settings
+
+# mkdocs documentation
+
+# mypy
+
+# Pyre type checker
+
+# pytype static type analyzer
+
+# Cython debug symbols
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+
+### Python Patch ###
+# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
+poetry.toml
+
+# ruff
+.ruff_cache/
+
+# LSP config files
+pyrightconfig.json
+
+### venv ###
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+pip-selfcheck.json
+
+### Windows ###
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# End of https://www.toptal.com/developers/gitignore/api/python,flask,venv,windows
+-------------------------------------------------------------------------------------------------------------------------------------
+#ngrok.exe
+-------------------------------------------------------------------------------------------------------------------------------------
+#src-Structure.txt
+-------------------------------------------------------------------------------------------------------------------------------------
+#flask_session/
+-------------------------------------------------------------------------------------------------------------------------------------
+#logs/
+-------------------------------------------------------------------------------------------------------------------------------------
+#test/
+-------------------------------------------------------------------------------------------------------------------------------------
+#venv/
+-------------------------------------------------------------------------------------------------------------------------------------
