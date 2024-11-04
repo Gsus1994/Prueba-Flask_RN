@@ -16,7 +16,12 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'mysecretkey')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwtsecretkey')
     TOKEN_EXPIRATION = int(os.getenv('TOKEN_EXPIRATION', 5))
-    AES_KEY = bytes.fromhex(os.getenv('AES_KEY'))
+
+    AES_KEY_HEX = os.getenv('AES_KEY')
+    if AES_KEY_HEX:
+        AES_KEY = bytes.fromhex(AES_KEY_HEX)
+    else:
+        raise ValueError("La variable de entorno AES_KEY no está configurada o es inválida.")
 
     # Configuración de la sesión en el sistema de archivos usando CacheLib
     SESSION_TYPE = 'filesystem'
@@ -81,7 +86,6 @@ def cleanup_sessions(app):
                     app.logger.info(f"Archivo de sesión eliminado: {session_file}")
                 except Exception as e:
                     app.logger.error(f"Error eliminando el archivo {session_file}: {str(e)}")
-
 
 def init_app(app):
     jwt.init_app(app)

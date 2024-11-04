@@ -1,0 +1,31 @@
+heroku config:set SECRET_KEY='B!1w8*NAt1T^%kvhUI*S^+'
+heroku config:set MONGO_URI='mongodb+srv://reactiontoo:4Eb6IQ44tAdh0rTL@reaction.l17lr.mongodb.net/Too?retryWrites=true&w=majority&appName=ReAction'
+heroku config:set JWT_SECRET_KEY='11892df588b5bbe224f039a88caa004c79a83fc9775e4a44800baa138567330f'
+heroku config:set AES_KEY='df6f231e1e10446bba09adb81875dd12c546afa911744e34b6722bd4d583cf24'
+heroku config:set FLASK_CONFIG='production'
+heroku config:set SESSION_LIFETIME_HOURS='4'
+heroku config:set TOKEN_EXPIRATION='30'
+
+
+
+
+
+
+heroku addons:create heroku-redis:hobby-dev
+
+
+git init
+heroku git:remote -a _TOO_FLASK_HEROKU_
+
+
+git add .
+git commit -m "Preparando para desplegar en Heroku"
+
+
+git push heroku master
+
+
+heroku logs --tail
+
+
+heroku open

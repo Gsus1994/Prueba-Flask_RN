@@ -1,0 +1,33 @@
+{% extends "template.html" %}
+
+{% block Title %}
+    Mapa de España
+{% endblock %}
+
+{% block CustomCSS %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/map.css') }}">
+{% endblock %}
+
+{% block Body %}
+    <div id="map"></div>
+    <div id="sidebar">
+        <img src="{{ url_for('static', filename='images/240509_Too_Logo_Gris_Oscuro.png') }}" alt="Logo Too">
+            <h1>Información sobre el itinerario</h1>
+            
+            <label id="sidebar-label" for="dni-input">Introduzca un DNI:</label>
+            <input id="dni-input" type="text" placeholder="DNI">
+            
+            <button id="search-agreements">Buscar Acuerdos</button>
+            
+            <select id="agreements-dropdown" disabled>
+                <option value="">Seleccione un acuerdo</option>
+            </select>
+            
+            <button id="show-itinerary" disabled>Mostrar itinerario</button>
+            <button id="logout-button">Cerrar sesión</button>
+    </div>
+    <button id="show-sidebar-btn" class="btn">Restaurar</button>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}
